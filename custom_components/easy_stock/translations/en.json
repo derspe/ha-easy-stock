@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Stock",
+        "description": "Enter the Yahoo Finance symbol (e.g. SAP.DE, AAPL, BTC-USD)",
+        "data": {
+          "symbol": "Symbol",
+          "name": "Display name (optional)",
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This symbol is already configured."
+    }
+  }
+}

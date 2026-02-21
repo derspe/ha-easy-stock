@@ -1,0 +1,14 @@
+# Build output (Vite intermediate)
+dist/
+
+# Node
+node_modules/
+
+# Python
+*.pyc
+__pycache__/
+.venv/
+
+# Editor / OS
+.env
+.DS_Store
