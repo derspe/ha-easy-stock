@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without v-prefix (e.g. 0.2.1)"
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build card JS
+        run: npm run build
+
+      - name: Update version in manifest.json
+        run: |
+          jq --arg v "${{ github.event.inputs.version }}" '.version = $v' \
+            custom_components/easy_stock/manifest.json > /tmp/manifest.json
+          mv /tmp/manifest.json custom_components/easy_stock/manifest.json
+
+      - name: Commit, tag and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add custom_components/easy_stock/www/easy-stock-card.js
+          git add custom_components/easy_stock/www/easy-stock-card.js.map
+          git add custom_components/easy_stock/manifest.json
+          git diff --cached --quiet || git commit -m "Release v${{ github.event.inputs.version }}"
+          git tag "v${{ github.event.inputs.version }}"
+          git push origin HEAD:main
+          git push origin "v${{ github.event.inputs.version }}"
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "v${{ github.event.inputs.version }}" \
+            --title "v${{ github.event.inputs.version }}" \
+            --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
