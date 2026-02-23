@@ -1,5 +1,8 @@
 # Easy Stock — Home Assistant Integration
 
+> **Early development** — This integration is in an early stage. Bugs and breaking changes may occur.
+> If you run into a problem, please [open an issue](https://github.com/derspe/ha-easy-stock/issues) so it can be tracked and fixed.
+
 Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered by Yahoo Finance, with a built-in Lovelace card featuring sparkline charts.
 
 **No API key required. Fully configured through the UI — no YAML needed.**
@@ -9,7 +12,7 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 ## Features
 
 - **Any asset on Yahoo Finance** — stocks, ETFs, index funds, cryptocurrencies, commodities
-- **Sensor entity per asset** — current price, daily change, market state, full price history as attributes
+- **Sensor entity per asset** — current price, daily change, market state and more as attributes
 - **History recording** — works with the HA recorder out of the box (`SensorStateClass.MEASUREMENT`)
 - **Built-in Lovelace card** — auto-registered, no manual resource setup required
   - Sparkline charts for 5 time ranges: **1D · 1W · 1M · YTD · 1Y**
@@ -18,7 +21,7 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
   - **Currency conversion** — display all assets in a single currency (EUR, USD, GBP, CHF, AUD, CAD, JPY, SEK, NOK, DKK, CNY, HKD); rates updated hourly from [frankfurter.app](https://frankfurter.app)
   - **Visual card editor** with drag & drop to reorder assets
   - **20 languages** — UI adapts automatically to your HA language (en, de, fr, nl, es, it, pt, pl, sv, da, nb, fi, cs, hu, ru, zh, ja, ko, tr, ar)
-- **Configurable polling interval** — 60 s to 24 h (default: 5 min)
+- **Configurable polling interval** — 60 s to 24 h (default: 15 min)
 - **No API key required**
 
 ## Requirements
@@ -61,7 +64,7 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 |---|---|
 | **Symbol** | Yahoo Finance ticker (see examples below) |
 | **Name** | Display name shown in the card (optional — falls back to the symbol if left empty) |
-| **Update interval** | How often to poll Yahoo Finance in seconds (60–86400, default 300) |
+| **Update interval** | How often to poll Yahoo Finance in seconds (60–86400, default 900) |
 
 Repeat for each asset you want to track. Each asset becomes its own sensor entity.
 
@@ -86,7 +89,9 @@ Use the search on [finance.yahoo.com](https://finance.yahoo.com) to find the exa
 
 ## Sensor Attributes
 
-Each sensor exposes the following state attributes:
+The sensor **state** is the current price (numeric), and the **unit of measurement** is the asset's native trading currency (e.g. `EUR`, `USD`).
+
+Each sensor additionally exposes the following state attributes:
 
 | Attribute | Type | Description |
 |---|---|---|
@@ -97,7 +102,6 @@ Each sensor exposes the following state attributes:
 | `change` | float | Absolute price change from previous close |
 | `change_pct` | float | Percentage change from previous close |
 | `previous_close` | float | Previous closing price |
-| `history` | list | Up to 252 daily closing prices: `[["YYYY-MM-DD", price], ...]` |
 | `price_is_live` | bool | `true` when market is open or asset trades 24/7 |
 
 ## Lovelace Card
