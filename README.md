@@ -16,7 +16,7 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 - **History recording** — works with the HA recorder out of the box (`SensorStateClass.MEASUREMENT`)
 - **Built-in Lovelace card** — auto-registered, no manual resource setup required
   - Sparkline charts for 5 time ranges: **1D · 1W · 1M · YTD · 1Y**
-  - Short-term (1D/1W) charts use HA recorder data for 5-minute resolution
+  - Short-term (1D/1W) charts use HA recorder data (resolution matches the configured poll interval)
   - Long-term charts (1M/YTD/1Y) use daily closing prices from Yahoo Finance
   - **Currency conversion** — display all assets in a single currency (EUR, USD, GBP, CHF, AUD, CAD, JPY, SEK, NOK, DKK, CNY, HKD); rates updated hourly from [frankfurter.app](https://frankfurter.app)
   - **Visual card editor** with drag & drop to reorder assets
@@ -132,13 +132,13 @@ entities:
 
 | Value | Meaning | Data source |
 |---|---|---|
-| `1T` | 1 Day | HA recorder (5-min resolution) |
-| `1W` | 1 Week | HA recorder (5-min resolution) |
+| `1T` | 1 Day | HA recorder (resolution = poll interval) |
+| `1W` | 1 Week | HA recorder (resolution = poll interval) |
 | `1M` | 1 Month | Yahoo Finance daily closes |
 | `YTD` | Year to date | Yahoo Finance daily closes |
 | `1J` | 1 Year | Yahoo Finance daily closes |
 
-> **Note:** 1D and 1W charts use HA recorder data for 5-minute resolution. Until enough history has accumulated, the card falls back automatically: the 1D chart shows a two-point line from the previous close to the current price; the 1W chart uses the last 4 daily closes from Yahoo Finance. Full 5-minute resolution for the 1W view builds up over 7 days. Charts for 1M, YTD, and 1Y are sourced entirely from Yahoo Finance and are available from the first update.
+> **Note:** 1D and 1W charts use HA recorder data. Resolution depends on the configured poll interval (default: 15 min). Until enough history has accumulated, the card falls back automatically: the 1D chart shows a two-point line from the previous close to the current price; the 1W chart uses the last 4 daily closes from Yahoo Finance. Full resolution for the 1W view builds up over 7 days. Charts for 1M, YTD, and 1Y are sourced entirely from Yahoo Finance and are available from the first update.
 
 ## Troubleshooting
 
