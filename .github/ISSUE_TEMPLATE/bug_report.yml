@@ -1,0 +1,77 @@
+name: Bug Report
+description: Something is not working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as possible — it helps a lot.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: "Example: The 1M chart always shows 0% even though the sensor has data."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can the bug be reliably triggered?
+      placeholder: |
+        1. Add sensor for symbol AAPL
+        2. Open card, select range 1M
+        3. Chart shows flat line at 0%
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+    validations:
+      required: true
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      description: Found in Settings → About
+      placeholder: "2024.12.0"
+    validations:
+      required: true
+
+  - type: input
+    id: integration_version
+    attributes:
+      label: Easy Stock version
+      description: Found in HACS or Settings → Devices & Services → Easy Stock
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: symbol
+    attributes:
+      label: Affected symbol(s)
+      description: Yahoo Finance ticker(s) involved, if applicable
+      placeholder: "AAPL, IWDA.AS, BTC-EUR"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        Copy any relevant entries from Settings → System → Logs.
+        Filter by `easy_stock` to narrow it down.
+      render: text
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Screenshots, card YAML, or anything else that might help.
