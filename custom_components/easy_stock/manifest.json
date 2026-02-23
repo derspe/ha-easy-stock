@@ -1,7 +1,7 @@
 {
   "domain": "easy_stock",
   "name": "Easy Stock",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "documentation": "https://github.com/derspe/ha-easy-stock",
   "issue_tracker": "https://github.com/derspe/ha-easy-stock/issues",
   "requirements": [],
