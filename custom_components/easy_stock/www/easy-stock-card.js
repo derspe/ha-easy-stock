@@ -1330,7 +1330,8 @@ let EasyStockCard = class extends i {
         if (!priceIsLive) {
           return [["prev", livePrice], [today, livePrice]];
         }
-        const prev = previousClose > 0 ? previousClose : livePrice;
+        const lastYahooEntry = yahooHistory.length > 0 ? yahooHistory[yahooHistory.length - 1] : null;
+        const prev = lastYahooEntry && lastYahooEntry[0] < today ? lastYahooEntry[1] : previousClose > 0 ? previousClose : livePrice;
         const todayStart = /* @__PURE__ */ new Date();
         todayStart.setHours(0, 0, 0, 0);
         const midnightISO = todayStart.toISOString();
@@ -1442,7 +1443,7 @@ let EasyStockCard = class extends i {
       void this._fetchHaHistory(entityId, this._timeRange);
     }
     const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
-    const priceIsLive = (attr.price_is_live ?? false) && attr.market_state === "REGULAR";
+    const priceIsLive = attr.price_is_live ?? false;
     const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, priceIsLive);
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;

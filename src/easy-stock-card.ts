@@ -536,12 +536,19 @@ export class EasyStockCard extends LitElement {
           return [["prev", livePrice], [today, livePrice]]; // flat → 0 %
         }
 
-        const prev = previousClose > 0 ? previousClose : livePrice;
+        // Use the last Yahoo history entry as the 1T baseline when it's from a previous day.
+        // This avoids UTC/local midnight boundary issues with attr.previous_close (coordinator
+        // derives previous_close from UTC dates, which can be off by one day at local midnight).
+        const lastYahooEntry = yahooHistory.length > 0 ? yahooHistory[yahooHistory.length - 1] : null;
+        const prev = (lastYahooEntry && lastYahooEntry[0] < today)
+          ? lastYahooEntry[1]
+          : (previousClose > 0 ? previousClose : livePrice);
+
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
         const midnightISO = todayStart.toISOString();
 
-        // HA recorder: filter to today only, then anchor at midnight with previousClose.
+        // HA recorder: filter to today only, then anchor at midnight with prev close.
         // Filtering avoids Friday's data bleeding into Saturday's view.
         if (haData && haData.length >= 1) {
           const todayData = haData.filter(([t]) => new Date(t) >= todayStart);
@@ -550,7 +557,7 @@ export class EasyStockCard extends LitElement {
           }
         }
 
-        // Fallback: previousClose at midnight → current price now.
+        // Fallback: prev close at midnight → current price now.
         return [[midnightISO, prev], [new Date().toISOString(), livePrice]];
       }
 
@@ -674,9 +681,11 @@ export class EasyStockCard extends LitElement {
     }
     const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
 
-    // market_state "REGULAR" = market open; anything else (CLOSED, PRE, POST) = closed.
-    // price_is_live alone is unreliable at UTC/local midnight boundaries.
-    const priceIsLive = (attr.price_is_live ?? false) && attr.market_state === "REGULAR";
+    // price_is_live from coordinator: True when the asset traded today (UTC date match).
+    // We no longer require market_state === "REGULAR" here because crypto (BTC) reports
+    // CLOSED briefly at UTC midnight despite trading 24/7. ETFs on weekends/holidays
+    // are caught correctly because their coordinator sets price_is_live = False.
+    const priceIsLive = attr.price_is_live ?? false;
     const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, priceIsLive);
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
