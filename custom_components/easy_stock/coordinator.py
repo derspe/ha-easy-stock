@@ -37,10 +37,25 @@ class StockDataCoordinator(DataUpdateCoordinator):
             stored = await self._store.async_load()
             self._history = stored if isinstance(stored, list) else []
 
-        # Choose URL: full 1y backfill when history is empty, mini 5d otherwise
+        # Migration: old versions capped history at 252 entries (stock trading days), which
+        # silently truncated crypto data to ~8 months (crypto trades 7 days/week = 365/year).
+        # Detect truncated history: ≥250 entries stored but oldest entry is newer than 355 days
+        # ago. Stocks/ETFs are unaffected (their oldest entry is always ~361–365 days old).
+        cutoff_355 = (datetime.now(timezone.utc) - timedelta(days=355)).strftime("%Y-%m-%d")
+        history_needs_backfill = not self._history or (
+            len(self._history) >= 250 and self._history[0][0] > cutoff_355
+        )
+        if history_needs_backfill and self._history:
+            _LOGGER.info(
+                "easy_stock: %s — history starts %s (<355 days), triggering full re-fetch",
+                self.symbol,
+                self._history[0][0],
+            )
+
+        # Choose URL: full 1y backfill when history is empty or truncated, mini 5d otherwise
         url = (
             YAHOO_CHART_URL.format(symbol=self.symbol)
-            if not self._history
+            if history_needs_backfill
             else YAHOO_CHART_URL_MINI.format(symbol=self.symbol)
         )
 
@@ -71,9 +86,10 @@ class StockDataCoordinator(DataUpdateCoordinator):
                     fetched.append([date_str, round(c, 4)])
 
             # Update persistent history
-            if not self._history:
-                # Initial backfill: store up to 252 trading days
-                self._history = fetched[-252:]
+            if history_needs_backfill:
+                # Initial backfill or migration: 365 days covers crypto (7-day trading week)
+                # as well as stocks/ETFs (~252 trading days ≤ 365).
+                self._history = fetched[-365:]
                 await self._store.async_save(self._history)
             elif fetched:
                 last_fetched_date = fetched[-1][0]
