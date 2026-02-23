@@ -1330,15 +1330,17 @@ let EasyStockCard = class extends i {
         if (!priceIsLive) {
           return [["prev", livePrice], [today, livePrice]];
         }
-        if (haData && haData.length >= 2) {
-          const first = haData[0][1];
-          const last2 = haData[haData.length - 1][1];
-          if (first > 0 && Math.abs(last2 - first) / first > 1e-3) {
-            return haData;
+        const prev = previousClose > 0 ? previousClose : livePrice;
+        const todayStart = /* @__PURE__ */ new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const midnightISO = todayStart.toISOString();
+        if (haData && haData.length >= 1) {
+          const todayData = haData.filter(([t2]) => new Date(t2) >= todayStart);
+          if (todayData.length >= 1) {
+            return [[midnightISO, prev], ...todayData];
           }
         }
-        const prev = previousClose > 0 ? previousClose : livePrice;
-        return [["prev", prev], [today, livePrice]];
+        return [[midnightISO, prev], [(/* @__PURE__ */ new Date()).toISOString(), livePrice]];
       }
       if (haData && haData.length >= 2) return haData;
       const base2 = yahooHistory.slice(-4);
@@ -1354,7 +1356,13 @@ let EasyStockCard = class extends i {
     } else if (range === "YTD") {
       const jan1 = `${(/* @__PURE__ */ new Date()).getFullYear()}-01-01`;
       const filtered = yahooHistory.filter(([d2]) => d2 >= jan1);
-      base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
+      const prevYearEntries = yahooHistory.filter(([d2]) => d2 < jan1);
+      const prevYearClose = prevYearEntries[prevYearEntries.length - 1];
+      if (prevYearClose) {
+        base = [prevYearClose, ...filtered];
+      } else {
+        base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
+      }
     } else {
       base = yahooHistory;
     }
@@ -1434,7 +1442,8 @@ let EasyStockCard = class extends i {
       void this._fetchHaHistory(entityId, this._timeRange);
     }
     const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
-    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, attr.price_is_live ?? false);
+    const priceIsLive = (attr.price_is_live ?? false) && attr.market_state === "REGULAR";
+    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, priceIsLive);
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
     const trendColor = isPositive ? "var(--success-color, #4caf50)" : "var(--error-color, #f44336)";
@@ -1452,25 +1461,39 @@ let EasyStockCard = class extends i {
           </span>
         </div>
         <div class="sparkline-wrap">
-          ${this._renderSparkline(chartData, trendColor)}
+          ${this._renderSparkline(chartData, trendColor, this._timeRange)}
         </div>
       </div>
     `;
   }
-  _renderSparkline(history, color) {
+  _renderSparkline(history, color, range) {
     if (history.length < 2) return A;
     const prices = history.map(([, p2]) => p2);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
-    const range = max - min || 1;
+    const priceRange = max - min || 1;
     const W = 200;
     const H2 = 48;
     const pad = 2;
-    const points = prices.map((p2, i2) => {
-      const x2 = pad + i2 / (prices.length - 1) * (W - pad * 2);
-      const y3 = pad + (1 - (p2 - min) / range) * (H2 - pad * 2);
-      return `${x2.toFixed(1)},${y3.toFixed(1)}`;
-    }).join(" ");
+    const isIntraday = range === "1T" && history[0][0].includes("T");
+    let points;
+    if (isIntraday) {
+      const todayStart = /* @__PURE__ */ new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const dayMs = 24 * 60 * 60 * 1e3;
+      points = history.map(([t2, p2]) => {
+        const xFrac = Math.max(0, Math.min(1, (new Date(t2).getTime() - todayStart.getTime()) / dayMs));
+        const x2 = pad + xFrac * (W - pad * 2);
+        const y3 = pad + (1 - (p2 - min) / priceRange) * (H2 - pad * 2);
+        return `${x2.toFixed(1)},${y3.toFixed(1)}`;
+      }).join(" ");
+    } else {
+      points = prices.map((p2, i2) => {
+        const x2 = pad + i2 / (prices.length - 1) * (W - pad * 2);
+        const y3 = pad + (1 - (p2 - min) / priceRange) * (H2 - pad * 2);
+        return `${x2.toFixed(1)},${y3.toFixed(1)}`;
+      }).join(" ");
+    }
     return w`
       <svg viewBox="0 0 ${W} ${H2}" preserveAspectRatio="none" class="sparkline-svg" aria-hidden="true">
         <polyline

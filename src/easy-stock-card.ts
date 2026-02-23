@@ -532,25 +532,26 @@ export class EasyStockCard extends LitElement {
 
       if (range === "1T") {
         // Market is closed for this asset (stock on weekend/holiday).
-        // Must check this BEFORE HA recorder data, because the 24h recorder window
-        // may contain Friday's trading movement which would bleed into Saturday's 1T view.
         if (!priceIsLive) {
           return [["prev", livePrice], [today, livePrice]]; // flat → 0 %
         }
 
-        // Market is live (stock in session or crypto 24/7):
-        // prefer HA recorder data (5-min resolution) if it shows meaningful movement.
-        if (haData && haData.length >= 2) {
-          const first = haData[0][1];
-          const last = haData[haData.length - 1][1];
-          if (first > 0 && Math.abs(last - first) / first > 0.001) {
-            return haData;
+        const prev = previousClose > 0 ? previousClose : livePrice;
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const midnightISO = todayStart.toISOString();
+
+        // HA recorder: filter to today only, then anchor at midnight with previousClose.
+        // Filtering avoids Friday's data bleeding into Saturday's view.
+        if (haData && haData.length >= 1) {
+          const todayData = haData.filter(([t]) => new Date(t) >= todayStart);
+          if (todayData.length >= 1) {
+            return [[midnightISO, prev], ...todayData];
           }
         }
 
-        // HA recorder not yet built up → fall back to sensor attributes.
-        const prev = previousClose > 0 ? previousClose : livePrice;
-        return [["prev", prev], [today, livePrice]];
+        // Fallback: previousClose at midnight → current price now.
+        return [[midnightISO, prev], [new Date().toISOString(), livePrice]];
       }
 
       // 1W: HA recorder data regardless of market state
@@ -571,7 +572,14 @@ export class EasyStockCard extends LitElement {
     } else if (range === "YTD") {
       const jan1 = `${new Date().getFullYear()}-01-01`;
       const filtered = yahooHistory.filter(([d]) => d >= jan1);
-      base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
+      // Prepend last close of the previous year as YTD baseline (same logic as Yahoo Finance).
+      const prevYearEntries = yahooHistory.filter(([d]) => d < jan1);
+      const prevYearClose = prevYearEntries[prevYearEntries.length - 1];
+      if (prevYearClose) {
+        base = [prevYearClose, ...filtered];
+      } else {
+        base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
+      }
     } else {
       base = yahooHistory; // 1J
     }
@@ -666,7 +674,10 @@ export class EasyStockCard extends LitElement {
     }
     const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
 
-    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, attr.price_is_live ?? false);
+    // market_state "REGULAR" = market open; anything else (CLOSED, PRE, POST) = closed.
+    // price_is_live alone is unreliable at UTC/local midnight boundaries.
+    const priceIsLive = (attr.price_is_live ?? false) && attr.market_state === "REGULAR";
+    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, priceIsLive);
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
     const trendColor = isPositive
@@ -687,30 +698,49 @@ export class EasyStockCard extends LitElement {
           </span>
         </div>
         <div class="sparkline-wrap">
-          ${this._renderSparkline(chartData, trendColor)}
+          ${this._renderSparkline(chartData, trendColor, this._timeRange)}
         </div>
       </div>
     `;
   }
 
-  private _renderSparkline(history: [string, number][], color: string) {
+  private _renderSparkline(history: [string, number][], color: string, range: TimeRange) {
     if (history.length < 2) return nothing;
 
     const prices = history.map(([, p]) => p);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
-    const range = max - min || 1;
+    const priceRange = max - min || 1;
     const W = 200;
     const H = 48;
     const pad = 2;
 
-    const points = prices
-      .map((p, i) => {
-        const x = pad + (i / (prices.length - 1)) * (W - pad * 2);
-        const y = pad + (1 - (p - min) / range) * (H - pad * 2);
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(" ");
+    // 1T with real timestamps: time-proportional x-axis spanning the full day (00:00–23:59).
+    // At noon the line covers 50 % of the chart width; at 23:59 it covers 100 %.
+    const isIntraday = range === "1T" && history[0][0].includes("T");
+
+    let points: string;
+    if (isIntraday) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const dayMs = 24 * 60 * 60 * 1000;
+      points = history
+        .map(([t, p]) => {
+          const xFrac = Math.max(0, Math.min(1, (new Date(t).getTime() - todayStart.getTime()) / dayMs));
+          const x = pad + xFrac * (W - pad * 2);
+          const y = pad + (1 - (p - min) / priceRange) * (H - pad * 2);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        })
+        .join(" ");
+    } else {
+      points = prices
+        .map((p, i) => {
+          const x = pad + (i / (prices.length - 1)) * (W - pad * 2);
+          const y = pad + (1 - (p - min) / priceRange) * (H - pad * 2);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        })
+        .join(" ");
+    }
 
     return svg`
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="sparkline-svg" aria-hidden="true">

@@ -12,3 +12,6 @@ __pycache__/
 # Editor / OS
 .env
 .DS_Store
+
+# Local notes
+BACKLOG.md
