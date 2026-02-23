@@ -92,9 +92,7 @@ export class EasyStockCardEditor extends LitElement {
     if (!this.hass) return [];
     return Object.values(this.hass.states)
       .filter(
-        (e) =>
-          typeof e.attributes["symbol"] === "string" &&
-          Array.isArray(e.attributes["history"])
+        (e) => typeof e.attributes["symbol"] === "string"
       )
       .sort((a, b) =>
         (a.attributes["symbol"] as string).localeCompare(
@@ -390,6 +388,10 @@ export class EasyStockCard extends LitElement {
   private _haCache = new Map<string, HaHistoryCacheEntry>();
   private _fetching = new Set<string>();
 
+  /** Cache: symbol → { data, ts } — Yahoo daily history from REST endpoint */
+  private _yahooHistoryCache = new Map<string, { data: [string, number][]; ts: number }>();
+  private _fetchingYahoo = new Set<string>();
+
   public set hass(hass: HomeAssistant) {
     this._hass = hass;
   }
@@ -468,6 +470,35 @@ export class EasyStockCard extends LitElement {
       console.warn(`[easy-stock-card] HA history fetch failed for ${entityId}:`, err);
     } finally {
       this._fetching.delete(key);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Yahoo history cache (fetched from /api/easy_stock/history)
+  // -------------------------------------------------------------------------
+
+  private _cachedYahooHistory(symbol: string): [string, number][] | null {
+    const entry = this._yahooHistoryCache.get(symbol);
+    if (!entry || Date.now() - entry.ts > 60 * 60 * 1000) return null; // 1h TTL
+    return entry.data;
+  }
+
+  private async _fetchYahooHistory(symbol: string): Promise<void> {
+    if (this._fetchingYahoo.has(symbol)) return;
+    if (this._cachedYahooHistory(symbol) !== null) return;
+
+    this._fetchingYahoo.add(symbol);
+    try {
+      const result = await this._hass!.callApi<{ symbol: string; history: [string, number][] }>(
+        "GET",
+        `easy_stock/history?symbol=${encodeURIComponent(symbol)}`
+      );
+      this._yahooHistoryCache.set(symbol, { data: result.history, ts: Date.now() });
+      this.requestUpdate();
+    } catch (err) {
+      console.warn(`[easy-stock-card] Yahoo history fetch failed for ${symbol}:`, err);
+    } finally {
+      this._fetchingYahoo.delete(symbol);
     }
   }
 
@@ -628,12 +659,12 @@ export class EasyStockCard extends LitElement {
     const price = parseFloat(entity.state);
     const displayPrice = hasRates ? convertPrice(price, nativeCurrency, targetCurrency, this._rates) : price;
     const displayCurrency = hasRates ? targetCurrency : nativeCurrency;
-    const yahooHistory = attr.history ?? [];
-
-    // Trigger async HA history fetch for 1T/1W (no-op if cached or already fetching)
+    // Trigger async fetches (no-op if cached or already in flight)
+    void this._fetchYahooHistory(attr.symbol);
     if (HA_HISTORY_RANGES.includes(this._timeRange)) {
       void this._fetchHaHistory(entityId, this._timeRange as "1T" | "1W");
     }
+    const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
 
     const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, attr.price_is_live ?? false);
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);

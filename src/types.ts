@@ -37,8 +37,8 @@ export interface StockAttributes {
   change: number;
   change_pct: number;
   previous_close: number;
-  history: [string, number][]; // ["YYYY-MM-DD", price]
-  price_is_live: boolean;      // true when market is in session or asset trades continuously
+  history?: [string, number][]; // ["YYYY-MM-DD", price] — now served via /api/easy_stock/history
+  price_is_live: boolean;       // true when market is in session or asset trades continuously
 }
 
 export interface StockEntity {

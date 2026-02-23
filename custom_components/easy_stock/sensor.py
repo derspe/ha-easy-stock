@@ -23,7 +23,8 @@ class StockSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry = entry
         self._attr_unique_id = f"easy_stock_{entry.data[CONF_SYMBOL]}"
-        self._attr_name = (entry.data.get(CONF_NAME) or entry.title or entry.data[CONF_SYMBOL]).strip()
+        name = entry.options.get(CONF_NAME) or entry.data.get(CONF_NAME) or entry.title or entry.data[CONF_SYMBOL]
+        self._attr_name = name.strip()
 
     @property
     def native_value(self) -> float | None:
@@ -46,6 +47,5 @@ class StockSensor(CoordinatorEntity, SensorEntity):
             "change": d["change"],
             "change_pct": d["change_pct"],
             "previous_close": d["previous_close"],
-            "history": d["history"],
             "price_is_live": d["price_is_live"],
         }

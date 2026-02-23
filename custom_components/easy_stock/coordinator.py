@@ -2,9 +2,10 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 import aiohttp
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import YAHOO_CHART_URL
+from .const import YAHOO_CHART_URL, YAHOO_CHART_URL_MINI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ _HEADERS = {
 
 
 class StockDataCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass, symbol: str, update_interval: int) -> None:
+    def __init__(self, hass, symbol: str, update_interval: int, store: Store) -> None:
         super().__init__(
             hass,
             _LOGGER,
@@ -26,9 +27,23 @@ class StockDataCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=update_interval),
         )
         self.symbol = symbol
+        self._store = store
+        # None = not yet loaded from store (populated on first _async_update_data call)
+        self._history: list | None = None
 
     async def _async_update_data(self) -> dict:
-        url = YAHOO_CHART_URL.format(symbol=self.symbol)
+        # Load persistent history on first call
+        if self._history is None:
+            stored = await self._store.async_load()
+            self._history = stored if isinstance(stored, list) else []
+
+        # Choose URL: full 1y backfill when history is empty, mini 5d otherwise
+        url = (
+            YAHOO_CHART_URL.format(symbol=self.symbol)
+            if not self._history
+            else YAHOO_CHART_URL_MINI.format(symbol=self.symbol)
+        )
+
         try:
             async with aiohttp.ClientSession(headers=_HEADERS) as session:
                 async with session.get(
@@ -48,46 +63,49 @@ class StockDataCoordinator(DataUpdateCoordinator):
             timestamps = result.get("timestamp", [])
             closes = result["indicators"]["quote"][0].get("close", [])
 
-            # Build [[date_str, price], ...] — only complete pairs
-            history: list[list] = []
+            # Parse fetched closes into [[date_str, price], ...]
+            fetched: list[list] = []
             for ts, c in zip(timestamps, closes):
                 if ts is not None and c is not None:
                     date_str = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
-                    history.append([date_str, round(c, 4)])
+                    fetched.append([date_str, round(c, 4)])
 
-            history = history[-252:]  # max 1 year of trading days
+            # Update persistent history
+            if not self._history:
+                # Initial backfill: store up to 252 trading days
+                self._history = fetched[-252:]
+                await self._store.async_save(self._history)
+            elif fetched:
+                last_fetched_date = fetched[-1][0]
+                last_stored_date = self._history[-1][0]
+                if last_fetched_date > last_stored_date:
+                    self._history.append([last_fetched_date, fetched[-1][1]])
+                    await self._store.async_save(self._history)
 
-            # meta.previousClose can be wrong for some symbols (adjusted prices, splits, etc.).
-            # Use history entries as the authoritative source for previous_close.
+            # Price logic — same as before, based on fetched (recent) data
             today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
             meta_price = meta.get("regularMarketPrice") or 0
 
             price_is_live = False
-            if len(history) >= 2:
-                last_date, last_price = history[-1]
-                prev_price = history[-2][1]
+            if len(fetched) >= 2:
+                last_date, last_price = fetched[-1]
+                prev_price = fetched[-2][1]
 
                 if last_date == today_str:
-                    # Today's session close is already in history → completed session.
                     current_price = meta_price or last_price
                     previous_close = prev_price
                     price_is_live = True
                 else:
-                    # Today not yet in history → either market is open or it's a non-trading day.
-                    # Distinguish by comparing meta_price against the last historical close:
-                    # if they differ by > 0.01 % the market is in session (live price ≠ yesterday).
                     if meta_price and abs(meta_price - last_price) / last_price > 0.0001:
-                        # Market open: live price vs. previous (last history close = yesterday)
                         current_price = meta_price
                         previous_close = last_price
                         price_is_live = True
                     else:
-                        # Weekend / holiday: show last completed session's change
                         current_price = last_price
                         previous_close = prev_price
                         price_is_live = False
             else:
-                current_price = meta_price or (history[-1][1] if history else 0)
+                current_price = meta_price or (fetched[-1][1] if fetched else 0)
                 previous_close = meta.get("previousClose") or meta.get("chartPreviousClose") or 0
                 price_is_live = bool(meta_price)
 
@@ -103,8 +121,8 @@ class StockDataCoordinator(DataUpdateCoordinator):
                 "previous_close": round(previous_close, 4),
                 "change": round(change, 4),
                 "change_pct": round(change_pct, 2),
-                "history": history,
                 "price_is_live": price_is_live,
+                # NOTE: "history" intentionally omitted — served via /api/easy_stock/history
             }
         except (KeyError, IndexError, TypeError) as err:
             raise UpdateFailed(

@@ -934,7 +934,7 @@ let EasyStockCardEditor = class extends i {
   _detectStockSensors() {
     if (!this.hass) return [];
     return Object.values(this.hass.states).filter(
-      (e2) => typeof e2.attributes["symbol"] === "string" && Array.isArray(e2.attributes["history"])
+      (e2) => typeof e2.attributes["symbol"] === "string"
     ).sort(
       (a2, b2) => a2.attributes["symbol"].localeCompare(
         b2.attributes["symbol"]
@@ -1214,6 +1214,8 @@ let EasyStockCard = class extends i {
     this._rates = {};
     this._haCache = /* @__PURE__ */ new Map();
     this._fetching = /* @__PURE__ */ new Set();
+    this._yahooHistoryCache = /* @__PURE__ */ new Map();
+    this._fetchingYahoo = /* @__PURE__ */ new Set();
   }
   set hass(hass) {
     this._hass = hass;
@@ -1280,6 +1282,31 @@ let EasyStockCard = class extends i {
       console.warn(`[easy-stock-card] HA history fetch failed for ${entityId}:`, err);
     } finally {
       this._fetching.delete(key);
+    }
+  }
+  // -------------------------------------------------------------------------
+  // Yahoo history cache (fetched from /api/easy_stock/history)
+  // -------------------------------------------------------------------------
+  _cachedYahooHistory(symbol) {
+    const entry = this._yahooHistoryCache.get(symbol);
+    if (!entry || Date.now() - entry.ts > 60 * 60 * 1e3) return null;
+    return entry.data;
+  }
+  async _fetchYahooHistory(symbol) {
+    if (this._fetchingYahoo.has(symbol)) return;
+    if (this._cachedYahooHistory(symbol) !== null) return;
+    this._fetchingYahoo.add(symbol);
+    try {
+      const result = await this._hass.callApi(
+        "GET",
+        `easy_stock/history?symbol=${encodeURIComponent(symbol)}`
+      );
+      this._yahooHistoryCache.set(symbol, { data: result.history, ts: Date.now() });
+      this.requestUpdate();
+    } catch (err) {
+      console.warn(`[easy-stock-card] Yahoo history fetch failed for ${symbol}:`, err);
+    } finally {
+      this._fetchingYahoo.delete(symbol);
     }
   }
   // -------------------------------------------------------------------------
@@ -1402,10 +1429,11 @@ let EasyStockCard = class extends i {
     const price = parseFloat(entity.state);
     const displayPrice = hasRates ? convertPrice(price, nativeCurrency, targetCurrency, this._rates) : price;
     const displayCurrency = hasRates ? targetCurrency : nativeCurrency;
-    const yahooHistory = attr.history ?? [];
+    void this._fetchYahooHistory(attr.symbol);
     if (HA_HISTORY_RANGES.includes(this._timeRange)) {
       void this._fetchHaHistory(entityId, this._timeRange);
     }
+    const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
     const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, attr.price_is_live ?? false);
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
