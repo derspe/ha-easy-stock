@@ -891,16 +891,29 @@ const CURRENCIES = [
   { code: "HKD", label: "HK$ HKD" }
 ];
 let _rateCache = null;
-const RATE_TTL = 60 * 60 * 1e3;
+let _rateFetchInFlight = false;
+const RATE_TTL = 15 * 60 * 1e3;
 async function fetchRates() {
   if (_rateCache && Date.now() - _rateCache.fetchedAt < RATE_TTL) {
     return _rateCache.rates;
   }
-  const resp = await fetch("https://api.frankfurter.app/latest?base=EUR");
-  const data = await resp.json();
-  const rates = { EUR: 1, ...data.rates };
-  _rateCache = { rates, fetchedAt: Date.now() };
-  return rates;
+  if (_rateFetchInFlight) {
+    return (_rateCache == null ? void 0 : _rateCache.rates) ?? {};
+  }
+  _rateFetchInFlight = true;
+  try {
+    const resp = await fetch("https://api.frankfurter.app/latest?base=EUR");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const rates = { EUR: 1, ...data.rates };
+    _rateCache = { rates, fetchedAt: Date.now() };
+    return rates;
+  } catch (err) {
+    console.warn("[easy-stock-card] Currency rate fetch failed, using last known rates:", err);
+    return (_rateCache == null ? void 0 : _rateCache.rates) ?? {};
+  } finally {
+    _rateFetchInFlight = false;
+  }
 }
 function convertPrice(price, from, to, rates) {
   if (from === to) return price;
@@ -1219,6 +1232,11 @@ let EasyStockCard = class extends i {
   }
   set hass(hass) {
     this._hass = hass;
+    if (!_rateCache || Date.now() - _rateCache.fetchedAt >= RATE_TTL) {
+      void fetchRates().then((rates) => {
+        if (Object.keys(rates).length > 0) this._rates = rates;
+      });
+    }
   }
   get hass() {
     return this._hass;
@@ -1230,7 +1248,7 @@ let EasyStockCard = class extends i {
     this._config = config;
     this._timeRange = config.default_range ?? "1T";
     void fetchRates().then((rates) => {
-      this._rates = rates;
+      if (Object.keys(rates).length > 0) this._rates = rates;
     });
   }
   getCardSize() {
