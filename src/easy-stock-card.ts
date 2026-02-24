@@ -79,6 +79,12 @@ window.customCards.push({
   preview: true,
 });
 
+const TILE_MIN_WIDTHS: Record<string, string> = {
+  small: "170px",
+  medium: "220px",
+  large: "280px",
+};
+
 const RANGES: { value: TimeRange; label: string }[] = [
   { value: "1T", label: "1D" },
   { value: "1W", label: "1W" },
@@ -180,6 +186,16 @@ export class EasyStockCardEditor extends LitElement {
               >${label}</button>
             `
           )}
+        </div>
+
+        <div class="field-label">${s.tile_size}</div>
+        <div class="range-picker">
+          ${(["small", "medium", "large"] as const).map((size) => html`
+            <button
+              class="range-opt ${(this._config?.tile_size ?? "small") === size ? "active" : ""}"
+              @click=${() => this._set("tile_size", size)}
+            >${size === "small" ? "S" : size === "medium" ? "M" : "L"}</button>
+          `)}
         </div>
 
         ${entities.length > 0 ? html`
@@ -644,6 +660,8 @@ export class EasyStockCard extends LitElement {
   protected render() {
     if (!this._config || !this._hass) return nothing;
 
+    const tileMinWidth = TILE_MIN_WIDTHS[this._config.tile_size ?? "small"] ?? "170px";
+
     return html`
       <ha-card>
         <div class="card-top">
@@ -664,7 +682,7 @@ export class EasyStockCard extends LitElement {
           </div>
         </div>
         <div class="card-content">
-          <div class="asset-grid">
+          <div class="asset-grid" style="grid-template-columns: repeat(auto-fill, minmax(${tileMinWidth}, 1fr))">
             ${this._config.entities.map((entityId) =>
               this._renderEntity(entityId)
             )}
@@ -717,7 +735,7 @@ export class EasyStockCard extends LitElement {
     const arrow = isPositive ? "▲" : "▼";
 
     return html`
-      <div class="asset-tile">
+      <div class="asset-tile" @click=${() => this._openMoreInfo(entityId)}>
         <div class="asset-header">
           <span class="asset-name" title="${displayName}">${displayName}</span>
           <span class="asset-ticker">${attr.symbol}</span>
@@ -733,6 +751,14 @@ export class EasyStockCard extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  private _openMoreInfo(entityId: string): void {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: { entityId },
+      bubbles: true,
+      composed: true,
+    }));
   }
 
   private _renderSparkline(history: [string, number][], color: string, range: TimeRange) {
@@ -844,7 +870,6 @@ export class EasyStockCard extends LitElement {
 
     .asset-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
       gap: 10px;
     }
     .asset-tile {
@@ -855,6 +880,11 @@ export class EasyStockCard extends LitElement {
       flex-direction: column;
       gap: 4px;
       min-width: 0;
+      cursor: pointer;
+      transition: filter 0.15s ease;
+    }
+    .asset-tile:hover {
+      filter: brightness(1.08);
     }
     .asset-header {
       display: flex;

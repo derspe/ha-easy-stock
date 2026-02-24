@@ -606,6 +606,7 @@ const translations = {
       title_label: "Title (optional)",
       display_currency: "Display currency",
       default_range: "Default time range",
+      tile_size: "Tile size",
       selected: "Selected",
       drag_hint: "drag to reorder",
       add: "Add",
@@ -619,6 +620,7 @@ const translations = {
       title_label: "Titel (optional)",
       display_currency: "Anzeigewährung",
       default_range: "Standard Zeitraum",
+      tile_size: "Kachelgröße",
       selected: "Ausgewählt",
       drag_hint: "ziehen zum Sortieren",
       add: "Hinzufügen",
@@ -632,6 +634,7 @@ const translations = {
       title_label: "Titre (optionnel)",
       display_currency: "Devise d'affichage",
       default_range: "Période par défaut",
+      tile_size: "Taille des tuiles",
       selected: "Sélectionnés",
       drag_hint: "glisser pour réorganiser",
       add: "Ajouter",
@@ -645,6 +648,7 @@ const translations = {
       title_label: "Titel (optioneel)",
       display_currency: "Weergavevaluta",
       default_range: "Standaard tijdsbereik",
+      tile_size: "Tegelgrootte",
       selected: "Geselecteerd",
       drag_hint: "slepen om te sorteren",
       add: "Toevoegen",
@@ -658,6 +662,7 @@ const translations = {
       title_label: "Título (opcional)",
       display_currency: "Moneda de visualización",
       default_range: "Rango de tiempo predeterminado",
+      tile_size: "Tamaño de ficha",
       selected: "Seleccionados",
       drag_hint: "arrastrar para ordenar",
       add: "Añadir",
@@ -671,6 +676,7 @@ const translations = {
       title_label: "Titolo (opzionale)",
       display_currency: "Valuta di visualizzazione",
       default_range: "Intervallo predefinito",
+      tile_size: "Dimensione tessera",
       selected: "Selezionati",
       drag_hint: "trascina per riordinare",
       add: "Aggiungi",
@@ -684,6 +690,7 @@ const translations = {
       title_label: "Título (opcional)",
       display_currency: "Moeda de exibição",
       default_range: "Intervalo padrão",
+      tile_size: "Tamanho do bloco",
       selected: "Selecionados",
       drag_hint: "arrastar para reordenar",
       add: "Adicionar",
@@ -697,6 +704,7 @@ const translations = {
       title_label: "Tytuł (opcjonalny)",
       display_currency: "Waluta wyświetlania",
       default_range: "Domyślny zakres czasu",
+      tile_size: "Rozmiar kafelka",
       selected: "Wybrane",
       drag_hint: "przeciągnij, aby zmienić kolejność",
       add: "Dodaj",
@@ -710,6 +718,7 @@ const translations = {
       title_label: "Titel (valfritt)",
       display_currency: "Visningsvaluta",
       default_range: "Standardtidsintervall",
+      tile_size: "Kakelstorlek",
       selected: "Valda",
       drag_hint: "dra för att sortera",
       add: "Lägg till",
@@ -723,6 +732,7 @@ const translations = {
       title_label: "Titel (valgfrit)",
       display_currency: "Visningsvaluta",
       default_range: "Standard tidsinterval",
+      tile_size: "Flisestørrelse",
       selected: "Valgte",
       drag_hint: "træk for at sortere",
       add: "Tilføj",
@@ -736,6 +746,7 @@ const translations = {
       title_label: "Tittel (valgfritt)",
       display_currency: "Visningsvaluta",
       default_range: "Standard tidsintervall",
+      tile_size: "Flisestørrelse",
       selected: "Valgte",
       drag_hint: "dra for å sortere",
       add: "Legg til",
@@ -749,6 +760,7 @@ const translations = {
       title_label: "Otsikko (valinnainen)",
       display_currency: "Näyttövaluutta",
       default_range: "Oletusjaksovali",
+      tile_size: "Ruudun koko",
       selected: "Valitut",
       drag_hint: "vedä järjestääksesi",
       add: "Lisää",
@@ -762,6 +774,7 @@ const translations = {
       title_label: "Název (volitelný)",
       display_currency: "Zobrazovaná měna",
       default_range: "Výchozí časový rozsah",
+      tile_size: "Velikost dlaždice",
       selected: "Vybrané",
       drag_hint: "přetáhněte pro seřazení",
       add: "Přidat",
@@ -775,6 +788,7 @@ const translations = {
       title_label: "Cím (opcionális)",
       display_currency: "Megjelenítési pénznem",
       default_range: "Alapértelmezett időtartomány",
+      tile_size: "Csempe mérete",
       selected: "Kiválasztottak",
       drag_hint: "húzza a rendezéshez",
       add: "Hozzáadás",
@@ -788,6 +802,7 @@ const translations = {
       title_label: "Заголовок (необязательно)",
       display_currency: "Валюта отображения",
       default_range: "Временной диапазон по умолчанию",
+      tile_size: "Размер плитки",
       selected: "Выбранные",
       drag_hint: "перетащите для сортировки",
       add: "Добавить",
@@ -801,6 +816,7 @@ const translations = {
       title_label: "标题（可选）",
       display_currency: "显示货币",
       default_range: "默认时间范围",
+      tile_size: "磁贴大小",
       selected: "已选择",
       drag_hint: "拖动以排序",
       add: "添加",
@@ -814,6 +830,7 @@ const translations = {
       title_label: "タイトル（省略可）",
       display_currency: "表示通貨",
       default_range: "デフォルト期間",
+      tile_size: "タイルサイズ",
       selected: "選択済み",
       drag_hint: "ドラッグして並び替え",
       add: "追加",
@@ -827,6 +844,7 @@ const translations = {
       title_label: "제목 (선택사항)",
       display_currency: "표시 통화",
       default_range: "기본 기간",
+      tile_size: "타일 크기",
       selected: "선택됨",
       drag_hint: "드래그하여 정렬",
       add: "추가",
@@ -840,6 +858,7 @@ const translations = {
       title_label: "Başlık (isteğe bağlı)",
       display_currency: "Görüntüleme para birimi",
       default_range: "Varsayılan zaman aralığı",
+      tile_size: "Kutucuk boyutu",
       selected: "Seçilenler",
       drag_hint: "sıralamak için sürükle",
       add: "Ekle",
@@ -853,6 +872,7 @@ const translations = {
       title_label: "العنوان (اختياري)",
       display_currency: "عملة العرض",
       default_range: "النطاق الزمني الافتراضي",
+      tile_size: "حجم البلاطة",
       selected: "المحددة",
       drag_hint: "اسحب للترتيب",
       add: "إضافة",
@@ -929,6 +949,11 @@ window.customCards.push({
   description: "Displays stock prices from the Easy Stock integration with sparkline charts.",
   preview: true
 });
+const TILE_MIN_WIDTHS = {
+  small: "170px",
+  medium: "220px",
+  large: "280px"
+};
 const RANGES = [
   { value: "1T", label: "1D" },
   { value: "1W", label: "1W" },
@@ -1018,6 +1043,19 @@ let EasyStockCardEditor = class extends i {
               >${label}</button>
             `
     )}
+        </div>
+
+        <div class="field-label">${s2.tile_size}</div>
+        <div class="range-picker">
+          ${["small", "medium", "large"].map((size) => {
+      var _a3;
+      return b`
+            <button
+              class="range-opt ${(((_a3 = this._config) == null ? void 0 : _a3.tile_size) ?? "small") === size ? "active" : ""}"
+              @click=${() => this._set("tile_size", size)}
+            >${size === "small" ? "S" : size === "medium" ? "M" : "L"}</button>
+          `;
+    })}
         </div>
 
         ${entities.length > 0 ? b`
@@ -1405,6 +1443,7 @@ let EasyStockCard = class extends i {
   // -------------------------------------------------------------------------
   render() {
     if (!this._config || !this._hass) return A;
+    const tileMinWidth = TILE_MIN_WIDTHS[this._config.tile_size ?? "small"] ?? "170px";
     return b`
       <ha-card>
         <div class="card-top">
@@ -1425,7 +1464,7 @@ let EasyStockCard = class extends i {
           </div>
         </div>
         <div class="card-content">
-          <div class="asset-grid">
+          <div class="asset-grid" style="grid-template-columns: repeat(auto-fill, minmax(${tileMinWidth}, 1fr))">
             ${this._config.entities.map(
       (entityId) => this._renderEntity(entityId)
     )}
@@ -1468,7 +1507,7 @@ let EasyStockCard = class extends i {
     const trendColor = isPositive ? "var(--success-color, #4caf50)" : "var(--error-color, #f44336)";
     const arrow = isPositive ? "▲" : "▼";
     return b`
-      <div class="asset-tile">
+      <div class="asset-tile" @click=${() => this._openMoreInfo(entityId)}>
         <div class="asset-header">
           <span class="asset-name" title="${displayName}">${displayName}</span>
           <span class="asset-ticker">${attr.symbol}</span>
@@ -1484,6 +1523,13 @@ let EasyStockCard = class extends i {
         </div>
       </div>
     `;
+  }
+  _openMoreInfo(entityId) {
+    this.dispatchEvent(new CustomEvent("hass-more-info", {
+      detail: { entityId },
+      bubbles: true,
+      composed: true
+    }));
   }
   _renderSparkline(history, color, range) {
     if (history.length < 2) return A;
@@ -1583,7 +1629,6 @@ EasyStockCard.styles = i$3`
 
     .asset-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
       gap: 10px;
     }
     .asset-tile {
@@ -1594,6 +1639,11 @@ EasyStockCard.styles = i$3`
       flex-direction: column;
       gap: 4px;
       min-width: 0;
+      cursor: pointer;
+      transition: filter 0.15s ease;
+    }
+    .asset-tile:hover {
+      filter: brightness(1.08);
     }
     .asset-header {
       display: flex;
