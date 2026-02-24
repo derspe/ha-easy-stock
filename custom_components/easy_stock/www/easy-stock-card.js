@@ -1506,6 +1506,9 @@ let EasyStockCard = class extends i {
     const isPositive = periodChange >= 0;
     const trendColor = isPositive ? "var(--success-color, #4caf50)" : "var(--error-color, #f44336)";
     const arrow = isPositive ? "▲" : "▼";
+    const refRaw = chartData.length > 0 ? chartData[0][1] : null;
+    const displayRefPrice = refRaw !== null ? hasRates ? convertPrice(refRaw, nativeCurrency, targetCurrency, this._rates) : refRaw : null;
+    const showRef = displayRefPrice !== null && Math.abs(displayRefPrice - displayPrice) > 1e-4;
     return b`
       <div class="asset-tile" @click=${() => this._openMoreInfo(entityId)}>
         <div class="asset-header">
@@ -1513,7 +1516,10 @@ let EasyStockCard = class extends i {
           <span class="asset-ticker">${attr.symbol}</span>
         </div>
         <div class="asset-price">
-          <span class="price">${this._formatPrice(displayPrice, displayCurrency)}</span>
+          <div class="price-stack">
+            <span class="price">${this._formatPrice(displayPrice, displayCurrency)}</span>
+            ${showRef ? b`<span class="ref-price">${this._formatPrice(displayRefPrice, displayCurrency)}</span>` : A}
+          </div>
           <span class="change" style="color:${trendColor}">
             <span class="arrow">${arrow}</span>${Math.abs(periodChange).toFixed(2)}%
           </span>
@@ -1672,10 +1678,20 @@ EasyStockCard.styles = i$3`
       align-items: baseline;
       gap: 4px;
     }
+    .price-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
     .price {
       font-size: 0.95rem;
       font-weight: 600;
       color: var(--primary-text-color);
+      white-space: nowrap;
+    }
+    .ref-price {
+      font-size: 0.7rem;
+      color: var(--secondary-text-color);
       white-space: nowrap;
     }
     .change {
@@ -1687,7 +1703,7 @@ EasyStockCard.styles = i$3`
       gap: 2px;
     }
     .arrow { font-size: 0.7rem; }
-    .sparkline-wrap { margin-top: 1px; }
+    .sparkline-wrap { margin-top: 5px; }
     .sparkline-svg {
       width: 100%;
       height: 40px;

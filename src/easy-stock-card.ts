@@ -734,6 +734,12 @@ export class EasyStockCard extends LitElement {
       : "var(--error-color, #f44336)";
     const arrow = isPositive ? "▲" : "▼";
 
+    const refRaw = chartData.length > 0 ? chartData[0][1] : null;
+    const displayRefPrice = refRaw !== null
+      ? (hasRates ? convertPrice(refRaw, nativeCurrency, targetCurrency, this._rates) : refRaw)
+      : null;
+    const showRef = displayRefPrice !== null && Math.abs(displayRefPrice - displayPrice) > 0.0001;
+
     return html`
       <div class="asset-tile" @click=${() => this._openMoreInfo(entityId)}>
         <div class="asset-header">
@@ -741,7 +747,10 @@ export class EasyStockCard extends LitElement {
           <span class="asset-ticker">${attr.symbol}</span>
         </div>
         <div class="asset-price">
-          <span class="price">${this._formatPrice(displayPrice, displayCurrency)}</span>
+          <div class="price-stack">
+            <span class="price">${this._formatPrice(displayPrice, displayCurrency)}</span>
+            ${showRef ? html`<span class="ref-price">${this._formatPrice(displayRefPrice!, displayCurrency)}</span>` : nothing}
+          </div>
           <span class="change" style="color:${trendColor}">
             <span class="arrow">${arrow}</span>${Math.abs(periodChange).toFixed(2)}%
           </span>
@@ -913,10 +922,20 @@ export class EasyStockCard extends LitElement {
       align-items: baseline;
       gap: 4px;
     }
+    .price-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
     .price {
       font-size: 0.95rem;
       font-weight: 600;
       color: var(--primary-text-color);
+      white-space: nowrap;
+    }
+    .ref-price {
+      font-size: 0.7rem;
+      color: var(--secondary-text-color);
       white-space: nowrap;
     }
     .change {
@@ -928,7 +947,7 @@ export class EasyStockCard extends LitElement {
       gap: 2px;
     }
     .arrow { font-size: 0.7rem; }
-    .sparkline-wrap { margin-top: 1px; }
+    .sparkline-wrap { margin-top: 5px; }
     .sparkline-svg {
       width: 100%;
       height: 40px;
