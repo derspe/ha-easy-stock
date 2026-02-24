@@ -27,6 +27,7 @@ export interface EasyStockCardConfig extends LovelaceCardConfig {
   title?: string;
   default_range?: TimeRange;
   display_currency?: string; // target display currency, default "EUR"
+  tile_size?: "small" | "medium" | "large";
 }
 
 export interface StockAttributes {
