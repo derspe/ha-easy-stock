@@ -570,10 +570,12 @@ export class EasyStockCard extends LitElement {
 
         // HA recorder: filter to today only, then anchor at midnight with prev close.
         // Filtering avoids Friday's data bleeding into Saturday's view.
+        // Insert prev close again at the first real data timestamp so the chart shows
+        // a flat horizontal line from midnight to market open (no misleading diagonal).
         if (haData && haData.length >= 1) {
           const todayData = haData.filter(([t]) => new Date(t) >= todayStart);
           if (todayData.length >= 1) {
-            return [[midnightISO, prev], ...todayData];
+            return [[midnightISO, prev], [todayData[0][0], prev], ...todayData];
           }
         }
 

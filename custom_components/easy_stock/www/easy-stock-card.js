@@ -1356,7 +1356,7 @@ let EasyStockCard = class extends i {
         if (haData && haData.length >= 1) {
           const todayData = haData.filter(([t2]) => new Date(t2) >= todayStart);
           if (todayData.length >= 1) {
-            return [[midnightISO, prev], ...todayData];
+            return [[midnightISO, prev], [todayData[0][0], prev], ...todayData];
           }
         }
         return [[midnightISO, prev], [(/* @__PURE__ */ new Date()).toISOString(), livePrice]];
