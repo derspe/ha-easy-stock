@@ -1,6 +1,5 @@
 # Easy Stock — Home Assistant Integration
 
-> **Early development** — This integration is in an early stage. Bugs and breaking changes may occur.
 > If you run into a problem, please [open an issue](https://github.com/derspe/ha-easy-stock/issues) so it can be tracked and fixed.
 
 Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered by Yahoo Finance, with a built-in Lovelace card featuring sparkline charts.
@@ -18,7 +17,10 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
   - Sparkline charts for 5 time ranges: **1D · 1W · 1M · YTD · 1Y**
   - Short-term (1D/1W) charts use HA recorder data (resolution matches the configured poll interval)
   - Long-term charts (1M/YTD/1Y) use daily closing prices from Yahoo Finance
-  - **Currency conversion** — display all assets in a single currency (EUR, USD, GBP, CHF, AUD, CAD, JPY, SEK, NOK, DKK, CNY, HKD); rates updated hourly from [frankfurter.app](https://frankfurter.app)
+  - **Currency conversion** — display all assets in a single currency (EUR, USD, GBP, CHF, AUD, CAD, JPY, SEK, NOK, DKK, CNY, HKD); rates refreshed every 15 minutes from [frankfurter.app](https://frankfurter.app), with automatic fallback to the last known rates if the source is temporarily unavailable
+  - **Reference price** — period baseline shown below the current price (e.g. previous close for 1D, period start for 1W/1M/YTD/1Y)
+  - **Click any tile** to open the HA sensor detail dialog
+  - **Tile size** — choose S / M / L in the visual editor to control how many tiles fit per row
   - **Visual card editor** with drag & drop to reorder assets
   - **20 languages** — UI adapts automatically to your HA language (en, de, fr, nl, es, it, pt, pl, sv, da, nb, fi, cs, hu, ru, zh, ja, ko, tr, ar)
 - **Configurable polling interval** — 60 s to 24 h (default: 15 min)
@@ -122,6 +124,7 @@ type: custom:easy-stock-card
 title: My Portfolio          # optional
 display_currency: EUR        # optional — EUR (default), USD, GBP, CHF, AUD, CAD, JPY, SEK, NOK, DKK, CNY, HKD
 default_range: "1T"          # optional — 1T (1D), 1W, 1M, YTD, 1J (1Y) — default: 1T
+tile_size: small             # optional — small (default), medium, large
 entities:
   - sensor.apple
   - sensor.iwda_as
