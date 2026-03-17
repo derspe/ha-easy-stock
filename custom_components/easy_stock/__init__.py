@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 from homeassistant.components.frontend import add_extra_js_url
@@ -41,7 +42,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             cache_headers=False,
         )
     ])
-    add_extra_js_url(hass, f"/{DOMAIN}/easy-stock-card.js")
+    js_path = Path(__file__).parent / "www" / "easy-stock-card.js"
+    file_hash = hashlib.md5(js_path.read_bytes()).hexdigest()[:8]
+    add_extra_js_url(hass, f"/{DOMAIN}/easy-stock-card.js?v={file_hash}")
     hass.data.setdefault(DOMAIN, {})
     hass.http.register_view(EasyStockHistoryView())
     return True
