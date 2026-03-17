@@ -126,9 +126,9 @@ display_currency: EUR        # optional — EUR (default), USD, GBP, CHF, AUD, C
 default_range: "1T"          # optional — 1T (1D), 1W, 1M, YTD, 1J (1Y) — default: 1T
 tile_size: small             # optional — small (default), medium, large
 entities:
-  - sensor.apple
+  - sensor.aapl
   - sensor.iwda_as
-  - sensor.bitcoin
+  - sensor.btc_eur
 ```
 
 ### Time ranges
