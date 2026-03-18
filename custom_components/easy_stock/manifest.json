@@ -1,12 +1,12 @@
 {
   "domain": "easy_stock",
   "name": "Easy Stock",
-  "version": "0.2.4",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["http"],
   "documentation": "https://github.com/derspe/ha-easy-stock",
+  "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/derspe/ha-easy-stock/issues",
   "requirements": [],
-  "dependencies": ["http"],
-  "codeowners": [],
-  "iot_class": "cloud_polling",
-  "config_flow": true
+  "version": "0.2.4"
 }
