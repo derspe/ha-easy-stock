@@ -160,6 +160,9 @@ entities:
 **Wrong display name**
 - Set a custom **Name** in the integration configuration (Settings → Devices & Services → Easy Stock → Configure)
 
+**Infos in German language**
+- See https://smart-home-insights.net/home-assistant/aktien-etfs-und-krypto-in-home-assistant
+
 ## License
 
 MIT
