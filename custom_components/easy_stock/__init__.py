@@ -43,7 +43,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         )
     ])
     js_path = Path(__file__).parent / "www" / "easy-stock-card.js"
-    file_hash = hashlib.md5(js_path.read_bytes()).hexdigest()[:8]
+    js_bytes = await hass.async_add_executor_job(js_path.read_bytes)
+    file_hash = hashlib.md5(js_bytes).hexdigest()[:8]
     add_extra_js_url(hass, f"/{DOMAIN}/easy-stock-card.js?v={file_hash}")
     hass.data.setdefault(DOMAIN, {})
     hass.http.register_view(EasyStockHistoryView())
