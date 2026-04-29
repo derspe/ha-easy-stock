@@ -40,7 +40,7 @@ async function fetchRates(): Promise<Record<string, number>> {
   }
   _rateFetchInFlight = true;
   try {
-    const resp = await fetch("https://api.frankfurter.app/latest?base=EUR");
+    const resp = await fetch("https://api.frankfurter.dev/v1/latest?base=EUR");
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
     const rates: Record<string, number> = { EUR: 1, ...data.rates };
