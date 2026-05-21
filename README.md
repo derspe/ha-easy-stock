@@ -35,13 +35,10 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 
 ### Via HACS (recommended)
 
-> Easy Stock is not listed in the default HACS store. Add it as a custom repository.
-
 1. Open **HACS** in your Home Assistant sidebar
-2. Click the **⋮** menu (top right) → **Custom repositories**
-3. Enter the repository URL and select category **Integration** → click **Add**
-4. Search for **Easy Stock** in HACS and click **Download**
-5. Restart Home Assistant
+2. Search for **Easy Stock**
+3. Click **Download**
+4. Restart Home Assistant
 
 ### Manual
 
