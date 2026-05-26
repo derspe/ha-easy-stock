@@ -605,13 +605,15 @@ const translations = {
     editor: {
       title_label: "Title (optional)",
       display_currency: "Display currency",
+      default_display_currency: "Default display currency",
       default_range: "Default time range",
       tile_size: "Tile size",
       selected: "Selected",
       drag_hint: "drag to reorder",
       add: "Add",
       no_sensors: "No Easy Stock sensors found.",
-      setup_hint: "Set up under Settings → Integrations → Easy Stock."
+      setup_hint: "Set up under Settings → Integrations → Easy Stock.",
+      currency_inherit: "Default"
     },
     card: { not_found: "Not found" }
   },
@@ -619,13 +621,15 @@ const translations = {
     editor: {
       title_label: "Titel (optional)",
       display_currency: "Anzeigewährung",
+      default_display_currency: "Standard-Anzeigewährung",
       default_range: "Standard Zeitraum",
       tile_size: "Kachelgröße",
       selected: "Ausgewählt",
       drag_hint: "ziehen zum Sortieren",
       add: "Hinzufügen",
       no_sensors: "Keine Easy Stock Sensoren gefunden.",
-      setup_hint: "Integration einrichten unter Einstellungen → Integrationen → Easy Stock."
+      setup_hint: "Integration einrichten unter Einstellungen → Integrationen → Easy Stock.",
+      currency_inherit: "Standard"
     },
     card: { not_found: "Nicht gefunden" }
   },
@@ -633,13 +637,15 @@ const translations = {
     editor: {
       title_label: "Titre (optionnel)",
       display_currency: "Devise d'affichage",
+      default_display_currency: "Devise d'affichage par défaut",
       default_range: "Période par défaut",
       tile_size: "Taille des tuiles",
       selected: "Sélectionnés",
       drag_hint: "glisser pour réorganiser",
       add: "Ajouter",
       no_sensors: "Aucun capteur Easy Stock trouvé.",
-      setup_hint: "Configurer sous Paramètres → Intégrations → Easy Stock."
+      setup_hint: "Configurer sous Paramètres → Intégrations → Easy Stock.",
+      currency_inherit: "Par défaut"
     },
     card: { not_found: "Introuvable" }
   },
@@ -647,13 +653,15 @@ const translations = {
     editor: {
       title_label: "Titel (optioneel)",
       display_currency: "Weergavevaluta",
+      default_display_currency: "Standaard weergavevaluta",
       default_range: "Standaard tijdsbereik",
       tile_size: "Tegelgrootte",
       selected: "Geselecteerd",
       drag_hint: "slepen om te sorteren",
       add: "Toevoegen",
       no_sensors: "Geen Easy Stock-sensoren gevonden.",
-      setup_hint: "Instellen via Instellingen → Integraties → Easy Stock."
+      setup_hint: "Instellen via Instellingen → Integraties → Easy Stock.",
+      currency_inherit: "Standaard"
     },
     card: { not_found: "Niet gevonden" }
   },
@@ -661,13 +669,15 @@ const translations = {
     editor: {
       title_label: "Título (opcional)",
       display_currency: "Moneda de visualización",
+      default_display_currency: "Moneda de visualización predeterminada",
       default_range: "Rango de tiempo predeterminado",
       tile_size: "Tamaño de ficha",
       selected: "Seleccionados",
       drag_hint: "arrastrar para ordenar",
       add: "Añadir",
       no_sensors: "No se encontraron sensores Easy Stock.",
-      setup_hint: "Configurar en Ajustes → Integraciones → Easy Stock."
+      setup_hint: "Configurar en Ajustes → Integraciones → Easy Stock.",
+      currency_inherit: "Predeterminada"
     },
     card: { not_found: "No encontrado" }
   },
@@ -675,13 +685,15 @@ const translations = {
     editor: {
       title_label: "Titolo (opzionale)",
       display_currency: "Valuta di visualizzazione",
+      default_display_currency: "Valuta di visualizzazione predefinita",
       default_range: "Intervallo predefinito",
       tile_size: "Dimensione tessera",
       selected: "Selezionati",
       drag_hint: "trascina per riordinare",
       add: "Aggiungi",
       no_sensors: "Nessun sensore Easy Stock trovato.",
-      setup_hint: "Configurare in Impostazioni → Integrazioni → Easy Stock."
+      setup_hint: "Configurare in Impostazioni → Integrazioni → Easy Stock.",
+      currency_inherit: "Predefinita"
     },
     card: { not_found: "Non trovato" }
   },
@@ -689,13 +701,15 @@ const translations = {
     editor: {
       title_label: "Título (opcional)",
       display_currency: "Moeda de exibição",
+      default_display_currency: "Moeda de exibição padrão",
       default_range: "Intervalo padrão",
       tile_size: "Tamanho do bloco",
       selected: "Selecionados",
       drag_hint: "arrastar para reordenar",
       add: "Adicionar",
       no_sensors: "Nenhum sensor Easy Stock encontrado.",
-      setup_hint: "Configurar em Definições → Integrações → Easy Stock."
+      setup_hint: "Configurar em Definições → Integrações → Easy Stock.",
+      currency_inherit: "Padrão"
     },
     card: { not_found: "Não encontrado" }
   },
@@ -703,13 +717,15 @@ const translations = {
     editor: {
       title_label: "Tytuł (opcjonalny)",
       display_currency: "Waluta wyświetlania",
+      default_display_currency: "Domyślna waluta wyświetlania",
       default_range: "Domyślny zakres czasu",
       tile_size: "Rozmiar kafelka",
       selected: "Wybrane",
       drag_hint: "przeciągnij, aby zmienić kolejność",
       add: "Dodaj",
       no_sensors: "Nie znaleziono czujników Easy Stock.",
-      setup_hint: "Skonfiguruj w Ustawienia → Integracje → Easy Stock."
+      setup_hint: "Skonfiguruj w Ustawienia → Integracje → Easy Stock.",
+      currency_inherit: "Domyślna"
     },
     card: { not_found: "Nie znaleziono" }
   },
@@ -717,13 +733,15 @@ const translations = {
     editor: {
       title_label: "Titel (valfritt)",
       display_currency: "Visningsvaluta",
+      default_display_currency: "Standardvisningsvaluta",
       default_range: "Standardtidsintervall",
       tile_size: "Kakelstorlek",
       selected: "Valda",
       drag_hint: "dra för att sortera",
       add: "Lägg till",
       no_sensors: "Inga Easy Stock-sensorer hittades.",
-      setup_hint: "Konfigurera under Inställningar → Integrationer → Easy Stock."
+      setup_hint: "Konfigurera under Inställningar → Integrationer → Easy Stock.",
+      currency_inherit: "Standard"
     },
     card: { not_found: "Hittades inte" }
   },
@@ -731,13 +749,15 @@ const translations = {
     editor: {
       title_label: "Titel (valgfrit)",
       display_currency: "Visningsvaluta",
+      default_display_currency: "Standardvisningsvaluta",
       default_range: "Standard tidsinterval",
       tile_size: "Flisestørrelse",
       selected: "Valgte",
       drag_hint: "træk for at sortere",
       add: "Tilføj",
       no_sensors: "Ingen Easy Stock-sensorer fundet.",
-      setup_hint: "Opsæt under Indstillinger → Integrationer → Easy Stock."
+      setup_hint: "Opsæt under Indstillinger → Integrationer → Easy Stock.",
+      currency_inherit: "Standard"
     },
     card: { not_found: "Ikke fundet" }
   },
@@ -745,13 +765,15 @@ const translations = {
     editor: {
       title_label: "Tittel (valgfritt)",
       display_currency: "Visningsvaluta",
+      default_display_currency: "Standard visningsvaluta",
       default_range: "Standard tidsintervall",
       tile_size: "Flisestørrelse",
       selected: "Valgte",
       drag_hint: "dra for å sortere",
       add: "Legg til",
       no_sensors: "Ingen Easy Stock-sensorer funnet.",
-      setup_hint: "Konfigurer under Innstillinger → Integrasjoner → Easy Stock."
+      setup_hint: "Konfigurer under Innstillinger → Integrasjoner → Easy Stock.",
+      currency_inherit: "Standard"
     },
     card: { not_found: "Ikke funnet" }
   },
@@ -759,13 +781,15 @@ const translations = {
     editor: {
       title_label: "Otsikko (valinnainen)",
       display_currency: "Näyttövaluutta",
+      default_display_currency: "Oletusnäyttövaluutta",
       default_range: "Oletusjaksovali",
       tile_size: "Ruudun koko",
       selected: "Valitut",
       drag_hint: "vedä järjestääksesi",
       add: "Lisää",
       no_sensors: "Easy Stock -antureita ei löydy.",
-      setup_hint: "Määritä kohdassa Asetukset → Integraatiot → Easy Stock."
+      setup_hint: "Määritä kohdassa Asetukset → Integraatiot → Easy Stock.",
+      currency_inherit: "Oletus"
     },
     card: { not_found: "Ei löydy" }
   },
@@ -773,13 +797,15 @@ const translations = {
     editor: {
       title_label: "Název (volitelný)",
       display_currency: "Zobrazovaná měna",
+      default_display_currency: "Výchozí zobrazovaná měna",
       default_range: "Výchozí časový rozsah",
       tile_size: "Velikost dlaždice",
       selected: "Vybrané",
       drag_hint: "přetáhněte pro seřazení",
       add: "Přidat",
       no_sensors: "Nebyly nalezeny žádné senzory Easy Stock.",
-      setup_hint: "Nastavte v Nastavení → Integrace → Easy Stock."
+      setup_hint: "Nastavte v Nastavení → Integrace → Easy Stock.",
+      currency_inherit: "Výchozí"
     },
     card: { not_found: "Nenalezeno" }
   },
@@ -787,13 +813,15 @@ const translations = {
     editor: {
       title_label: "Cím (opcionális)",
       display_currency: "Megjelenítési pénznem",
+      default_display_currency: "Alapértelmezett megjelenítési pénznem",
       default_range: "Alapértelmezett időtartomány",
       tile_size: "Csempe mérete",
       selected: "Kiválasztottak",
       drag_hint: "húzza a rendezéshez",
       add: "Hozzáadás",
       no_sensors: "Nem találhatók Easy Stock érzékelők.",
-      setup_hint: "Állítsa be a Beállítások → Integrációk → Easy Stock menüpontban."
+      setup_hint: "Állítsa be a Beállítások → Integrációk → Easy Stock menüpontban.",
+      currency_inherit: "Alapértelmezett"
     },
     card: { not_found: "Nem található" }
   },
@@ -801,13 +829,15 @@ const translations = {
     editor: {
       title_label: "Заголовок (необязательно)",
       display_currency: "Валюта отображения",
+      default_display_currency: "Валюта отображения по умолчанию",
       default_range: "Временной диапазон по умолчанию",
       tile_size: "Размер плитки",
       selected: "Выбранные",
       drag_hint: "перетащите для сортировки",
       add: "Добавить",
       no_sensors: "Датчики Easy Stock не найдены.",
-      setup_hint: "Настройте в Настройки → Интеграции → Easy Stock."
+      setup_hint: "Настройте в Настройки → Интеграции → Easy Stock.",
+      currency_inherit: "По умолчанию"
     },
     card: { not_found: "Не найдено" }
   },
@@ -815,13 +845,15 @@ const translations = {
     editor: {
       title_label: "标题（可选）",
       display_currency: "显示货币",
+      default_display_currency: "默认显示货币",
       default_range: "默认时间范围",
       tile_size: "磁贴大小",
       selected: "已选择",
       drag_hint: "拖动以排序",
       add: "添加",
       no_sensors: "未找到 Easy Stock 传感器。",
-      setup_hint: "在设置 → 集成 → Easy Stock 中进行配置。"
+      setup_hint: "在设置 → 集成 → Easy Stock 中进行配置。",
+      currency_inherit: "默认"
     },
     card: { not_found: "未找到" }
   },
@@ -829,13 +861,15 @@ const translations = {
     editor: {
       title_label: "タイトル（省略可）",
       display_currency: "表示通貨",
+      default_display_currency: "デフォルト表示通貨",
       default_range: "デフォルト期間",
       tile_size: "タイルサイズ",
       selected: "選択済み",
       drag_hint: "ドラッグして並び替え",
       add: "追加",
       no_sensors: "Easy Stock センサーが見つかりません。",
-      setup_hint: "設定 → インテグレーション → Easy Stock で設定してください。"
+      setup_hint: "設定 → インテグレーション → Easy Stock で設定してください。",
+      currency_inherit: "デフォルト"
     },
     card: { not_found: "見つかりません" }
   },
@@ -843,13 +877,15 @@ const translations = {
     editor: {
       title_label: "제목 (선택사항)",
       display_currency: "표시 통화",
+      default_display_currency: "기본 표시 통화",
       default_range: "기본 기간",
       tile_size: "타일 크기",
       selected: "선택됨",
       drag_hint: "드래그하여 정렬",
       add: "추가",
       no_sensors: "Easy Stock 센서를 찾을 수 없습니다.",
-      setup_hint: "설정 → 통합 → Easy Stock에서 설정하세요."
+      setup_hint: "설정 → 통합 → Easy Stock에서 설정하세요.",
+      currency_inherit: "기본값"
     },
     card: { not_found: "찾을 수 없음" }
   },
@@ -857,13 +893,15 @@ const translations = {
     editor: {
       title_label: "Başlık (isteğe bağlı)",
       display_currency: "Görüntüleme para birimi",
+      default_display_currency: "Varsayılan görüntüleme para birimi",
       default_range: "Varsayılan zaman aralığı",
       tile_size: "Kutucuk boyutu",
       selected: "Seçilenler",
       drag_hint: "sıralamak için sürükle",
       add: "Ekle",
       no_sensors: "Easy Stock sensörü bulunamadı.",
-      setup_hint: "Ayarlar → Entegrasyonlar → Easy Stock altında yapılandırın."
+      setup_hint: "Ayarlar → Entegrasyonlar → Easy Stock altında yapılandırın.",
+      currency_inherit: "Varsayılan"
     },
     card: { not_found: "Bulunamadı" }
   },
@@ -871,13 +909,15 @@ const translations = {
     editor: {
       title_label: "العنوان (اختياري)",
       display_currency: "عملة العرض",
+      default_display_currency: "عملة العرض الافتراضية",
       default_range: "النطاق الزمني الافتراضي",
       tile_size: "حجم البلاطة",
       selected: "المحددة",
       drag_hint: "اسحب للترتيب",
       add: "إضافة",
       no_sensors: "لم يتم العثور على أجهزة استشعار Easy Stock.",
-      setup_hint: "الإعداد في الإعدادات ← التكاملات ← Easy Stock."
+      setup_hint: "الإعداد في الإعدادات ← التكاملات ← Easy Stock.",
+      currency_inherit: "افتراضي"
     },
     card: { not_found: "غير موجود" }
   }
@@ -886,16 +926,7 @@ function t(lang) {
   const base = lang.split("-")[0].toLowerCase();
   return translations[base] ?? translations["en"];
 }
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __decorateClass = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
-  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
-    if (decorator = decorators[i2])
-      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
-  if (kind && result) __defProp(target, key, result);
-  return result;
-};
+const RAW_CURRENCY = "RAW";
 const CURRENCIES = [
   { code: "EUR", label: "€ EUR" },
   { code: "USD", label: "$ USD" },
@@ -908,8 +939,61 @@ const CURRENCIES = [
   { code: "NOK", label: "kr NOK" },
   { code: "DKK", label: "kr DKK" },
   { code: "CNY", label: "¥ CNY" },
-  { code: "HKD", label: "HK$ HKD" }
+  { code: "HKD", label: "HK$ HKD" },
+  // RAW = show the unmodified sensor value with its native currency code, no conversion.
+  // Needed for FX-rate symbols (e.g. GBPPLN=X reports value in PLN) where any conversion
+  // is meaningless, and as an honest fallback for unusual native currencies.
+  { code: RAW_CURRENCY, label: "RAW (no conversion)" }
 ];
+const MINOR_UNIT = {
+  GBp: { major: "GBP", factor: 100 },
+  GBX: { major: "GBP", factor: 100 }
+};
+function normalizeNative(price, currency) {
+  const minor = MINOR_UNIT[currency];
+  if (minor) return { price: price / minor.factor, currency: minor.major };
+  return { price, currency };
+}
+function convertPrice(price, from, to, rates) {
+  const normalized = normalizeNative(price, from);
+  price = normalized.price;
+  from = normalized.currency;
+  if (from === to) return price;
+  const rateFrom = rates[from] ?? 1;
+  const rateTo = rates[to] ?? 1;
+  const inEur = from === "EUR" ? price : price / rateFrom;
+  return to === "EUR" ? inEur : inEur * rateTo;
+}
+function resolveDisplay(price, nativeCurrency, targetCurrency, rates) {
+  if (targetCurrency === RAW_CURRENCY) return { price, currency: nativeCurrency };
+  const hasRates = Object.keys(rates).length > 0;
+  if (!hasRates) return { price, currency: nativeCurrency };
+  return { price: convertPrice(price, nativeCurrency, targetCurrency, rates), currency: targetCurrency };
+}
+function isFxSymbol(symbol) {
+  return /=X$/i.test(symbol);
+}
+function resolveTargetCurrency(symbol, override, cardDefault) {
+  if (override) return override;
+  if (isFxSymbol(symbol)) return RAW_CURRENCY;
+  return cardDefault;
+}
+function entityIdOf(entry) {
+  return typeof entry === "string" ? entry : entry.entity;
+}
+function entityCurrencyOverride(entry) {
+  return typeof entry === "string" ? void 0 : entry.display_currency;
+}
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __decorateClass = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
+    if (decorator = decorators[i2])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result) __defProp(target, key, result);
+  return result;
+};
 let _rateCache = null;
 let _rateFetchInFlight = false;
 const RATE_TTL = 15 * 60 * 1e3;
@@ -934,13 +1018,6 @@ async function fetchRates() {
   } finally {
     _rateFetchInFlight = false;
   }
-}
-function convertPrice(price, from, to, rates) {
-  if (from === to) return price;
-  const rateFrom = rates[from] ?? 1;
-  const rateTo = rates[to] ?? 1;
-  const inEur = from === "EUR" ? price : price / rateFrom;
-  return to === "EUR" ? inEur : inEur * rateTo;
 }
 window.customCards = window.customCards || [];
 window.customCards.push({
@@ -1006,7 +1083,8 @@ let EasyStockCardEditor = class extends i {
     if (!this._config) return A;
     const { title, default_range, entities = [] } = this._config;
     const all = this._detectStockSensors();
-    const available = all.filter((s22) => !entities.includes(s22.entity_id));
+    const selectedIds = entities.map(entityIdOf);
+    const available = all.filter((s22) => !selectedIds.includes(s22.entity_id));
     const s2 = t(((_b = (_a2 = this.hass) == null ? void 0 : _a2.locale) == null ? void 0 : _b.language) ?? "en").editor;
     return b`
       <div class="editor">
@@ -1019,7 +1097,7 @@ let EasyStockCardEditor = class extends i {
     }}
         ></ha-textfield>
 
-        <div class="field-label">${s2.display_currency}</div>
+        <div class="field-label">${s2.default_display_currency}</div>
         <select
           class="currency-select"
           .value=${((_c = this._config) == null ? void 0 : _c.display_currency) ?? "EUR"}
@@ -1061,21 +1139,36 @@ let EasyStockCardEditor = class extends i {
         ${entities.length > 0 ? b`
           <div class="section-label">${s2.selected} <span class="hint-inline">— ${s2.drag_hint}</span></div>
           <div class="selected-list">
-            ${entities.map((entityId, index) => {
+            ${entities.map((entry, index) => {
+      const entityId = entityIdOf(entry);
+      const override = entityCurrencyOverride(entry);
       const sensor = all.find((s22) => s22.entity_id === entityId);
       const name = sensor ? this._sensorName(sensor) : entityId;
       const symbol = (sensor == null ? void 0 : sensor.attributes.symbol) ?? "";
       return b`
                 <div
                   class="selected-row ${this._dragIndex === index ? "dragging" : ""}"
-                  draggable="true"
-                  @dragstart=${(e2) => this._onDragStart(e2, index)}
                   @dragover=${(e2) => this._onDragOver(e2, index)}
-                  @dragend=${() => this._onDragEnd()}
                 >
-                  <span class="drag-handle">⠿</span>
+                  <span
+                    class="drag-handle"
+                    draggable="true"
+                    @dragstart=${(e2) => this._onDragStart(e2, index)}
+                    @dragend=${() => this._onDragEnd()}
+                  >⠿</span>
                   <span class="sensor-name">${name}</span>
                   <span class="sensor-meta">${symbol}</span>
+                  <select
+                    class="row-currency-select"
+                    title=${s2.display_currency}
+                    .value=${override ?? ""}
+                    @change=${(e2) => this._setEntityCurrency(index, e2.target.value)}
+                  >
+                    <option value="" ?selected=${!override}>${s2.currency_inherit}</option>
+                    ${CURRENCIES.map(({ code, label }) => b`
+                      <option value=${code} ?selected=${override === code}>${label}</option>
+                    `)}
+                  </select>
                   <button class="remove-btn" @click=${() => this._removeEntity(entityId)}>✕</button>
                 </div>
               `;
@@ -1109,7 +1202,15 @@ let EasyStockCardEditor = class extends i {
   _removeEntity(entityId) {
     var _a2;
     const current = ((_a2 = this._config) == null ? void 0 : _a2.entities) ?? [];
-    this._set("entities", current.filter((id) => id !== entityId));
+    this._set("entities", current.filter((e2) => entityIdOf(e2) !== entityId));
+  }
+  /** Set (or clear, when currency is "") the per-asset display-currency override. */
+  _setEntityCurrency(index, currency) {
+    var _a2;
+    const entities = [...((_a2 = this._config) == null ? void 0 : _a2.entities) ?? []];
+    const id = entityIdOf(entities[index]);
+    entities[index] = currency ? { entity: id, display_currency: currency } : id;
+    this._set("entities", entities);
   }
 };
 EasyStockCardEditor.styles = i$3`
@@ -1182,7 +1283,6 @@ EasyStockCardEditor.styles = i$3`
       padding: 6px 8px;
       border-radius: 6px;
       background: var(--secondary-background-color);
-      cursor: grab;
       user-select: none;
     }
     .selected-row.dragging {
@@ -1193,6 +1293,17 @@ EasyStockCardEditor.styles = i$3`
       color: var(--secondary-text-color);
       cursor: grab;
       flex-shrink: 0;
+    }
+    .row-currency-select {
+      flex-shrink: 0;
+      max-width: 96px;
+      padding: 2px 4px;
+      border: 1px solid var(--divider-color);
+      border-radius: 4px;
+      background: var(--card-background-color, #fff);
+      color: var(--primary-text-color);
+      font-size: 0.72rem;
+      cursor: pointer;
     }
     .remove-btn {
       background: none;
@@ -1466,15 +1577,17 @@ let EasyStockCard = class extends i {
         <div class="card-content">
           <div class="asset-grid" style="grid-template-columns: repeat(auto-fill, minmax(${tileMinWidth}, 1fr))">
             ${this._config.entities.map(
-      (entityId) => this._renderEntity(entityId)
+      (entry) => this._renderEntity(entry)
     )}
           </div>
         </div>
       </ha-card>
     `;
   }
-  _renderEntity(entityId) {
+  _renderEntity(entry) {
     var _a2, _b, _c, _d;
+    const entityId = entityIdOf(entry);
+    const currencyOverride = entityCurrencyOverride(entry);
     const raw = (_a2 = this._hass) == null ? void 0 : _a2.states[entityId];
     if (!raw) {
       return b`
@@ -1490,11 +1603,16 @@ let EasyStockCard = class extends i {
     const attr = entity.attributes;
     const displayName = raw.attributes["friendly_name"] || attr.long_name || attr.symbol;
     const nativeCurrency = attr.currency;
-    const targetCurrency = ((_d = this._config) == null ? void 0 : _d.display_currency) ?? "EUR";
-    const hasRates = Object.keys(this._rates).length > 0;
+    const cardDefaultCurrency = ((_d = this._config) == null ? void 0 : _d.display_currency) ?? "EUR";
+    const targetCurrency = resolveTargetCurrency(attr.symbol, currencyOverride, cardDefaultCurrency);
+    const isRaw = targetCurrency === RAW_CURRENCY;
     const price = parseFloat(entity.state);
-    const displayPrice = hasRates ? convertPrice(price, nativeCurrency, targetCurrency, this._rates) : price;
-    const displayCurrency = hasRates ? targetCurrency : nativeCurrency;
+    const { price: displayPrice, currency: displayCurrency } = resolveDisplay(
+      price,
+      nativeCurrency,
+      targetCurrency,
+      this._rates
+    );
     void this._fetchYahooHistory(attr.symbol);
     if (HA_HISTORY_RANGES.includes(this._timeRange)) {
       void this._fetchHaHistory(entityId, this._timeRange);
@@ -1507,7 +1625,7 @@ let EasyStockCard = class extends i {
     const trendColor = isPositive ? "var(--success-color, #4caf50)" : "var(--error-color, #f44336)";
     const arrow = isPositive ? "▲" : "▼";
     const refRaw = chartData.length > 0 ? chartData[0][1] : null;
-    const displayRefPrice = refRaw !== null ? hasRates ? convertPrice(refRaw, nativeCurrency, targetCurrency, this._rates) : refRaw : null;
+    const displayRefPrice = refRaw !== null ? resolveDisplay(refRaw, nativeCurrency, targetCurrency, this._rates).price : null;
     const showRef = displayRefPrice !== null && Math.abs(displayRefPrice - displayPrice) > 1e-4;
     return b`
       <div class="asset-tile" @click=${() => this._openMoreInfo(entityId)}>
@@ -1517,8 +1635,8 @@ let EasyStockCard = class extends i {
         </div>
         <div class="asset-price">
           <div class="price-stack">
-            <span class="price">${this._formatPrice(displayPrice, displayCurrency)}</span>
-            ${showRef ? b`<span class="ref-price">${this._formatPrice(displayRefPrice, displayCurrency)}</span>` : A}
+            <span class="price">${this._formatPrice(displayPrice, displayCurrency, isRaw)}</span>
+            ${showRef ? b`<span class="ref-price">${this._formatPrice(displayRefPrice, displayCurrency, isRaw)}</span>` : A}
           </div>
           <span class="change" style="color:${trendColor}">
             <span class="arrow">${arrow}</span>${Math.abs(periodChange).toFixed(2)}%
@@ -1578,14 +1696,16 @@ let EasyStockCard = class extends i {
       </svg>
     `;
   }
-  _formatPrice(price, currency) {
+  _formatPrice(price, currency, plain = false) {
     if (isNaN(price)) return "–";
+    const maxDigits = price < 10 ? 4 : 2;
+    if (plain) return `${price.toFixed(maxDigits)} ${currency}`;
     try {
       return new Intl.NumberFormat(void 0, {
         style: "currency",
         currency,
         minimumFractionDigits: 2,
-        maximumFractionDigits: price < 10 ? 4 : 2
+        maximumFractionDigits: maxDigits
       }).format(price);
     } catch {
       return `${price.toFixed(2)} ${currency}`;

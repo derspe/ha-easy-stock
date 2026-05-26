@@ -3,29 +3,23 @@ import { customElement, property, state } from "lit/decorators.js";
 import type {
   HomeAssistant,
   EasyStockCardConfig,
+  EntityConfig,
   StockEntity,
   TimeRange,
 } from "./types";
 import { t } from "./translations";
+import {
+  CURRENCIES,
+  RAW_CURRENCY,
+  resolveDisplay,
+  resolveTargetCurrency,
+  entityIdOf,
+  entityCurrencyOverride,
+} from "./currency";
 
 // ---------------------------------------------------------------------------
-// Currency conversion
+// Currency rate fetching (the rate table + conversion model live in ./currency)
 // ---------------------------------------------------------------------------
-
-const CURRENCIES: { code: string; label: string }[] = [
-  { code: "EUR", label: "€ EUR" },
-  { code: "USD", label: "$ USD" },
-  { code: "GBP", label: "£ GBP" },
-  { code: "CHF", label: "Fr CHF" },
-  { code: "AUD", label: "A$ AUD" },
-  { code: "CAD", label: "CA$ CAD" },
-  { code: "JPY", label: "¥ JPY" },
-  { code: "SEK", label: "kr SEK" },
-  { code: "NOK", label: "kr NOK" },
-  { code: "DKK", label: "kr DKK" },
-  { code: "CNY", label: "¥ CNY" },
-  { code: "HKD", label: "HK$ HKD" },
-];
 
 let _rateCache: { rates: Record<string, number>; fetchedAt: number } | null = null;
 let _rateFetchInFlight = false;
@@ -52,19 +46,6 @@ async function fetchRates(): Promise<Record<string, number>> {
   } finally {
     _rateFetchInFlight = false;
   }
-}
-
-function convertPrice(
-  price: number,
-  from: string,
-  to: string,
-  rates: Record<string, number>
-): number {
-  if (from === to) return price;
-  const rateFrom = rates[from] ?? 1;
-  const rateTo = rates[to] ?? 1;
-  const inEur = from === "EUR" ? price : price / rateFrom;
-  return to === "EUR" ? inEur : inEur * rateTo;
 }
 
 // ---------------------------------------------------------------------------
@@ -151,7 +132,8 @@ export class EasyStockCardEditor extends LitElement {
     if (!this._config) return nothing;
     const { title, default_range, entities = [] } = this._config;
     const all = this._detectStockSensors();
-    const available = all.filter((s) => !entities.includes(s.entity_id));
+    const selectedIds = entities.map(entityIdOf);
+    const available = all.filter((s) => !selectedIds.includes(s.entity_id));
     const s = t(this.hass?.locale?.language ?? "en").editor;
 
     return html`
@@ -165,7 +147,7 @@ export class EasyStockCardEditor extends LitElement {
           }}
         ></ha-textfield>
 
-        <div class="field-label">${s.display_currency}</div>
+        <div class="field-label">${s.default_display_currency}</div>
         <select
           class="currency-select"
           .value=${this._config?.display_currency ?? "EUR"}
@@ -201,21 +183,37 @@ export class EasyStockCardEditor extends LitElement {
         ${entities.length > 0 ? html`
           <div class="section-label">${s.selected} <span class="hint-inline">— ${s.drag_hint}</span></div>
           <div class="selected-list">
-            ${entities.map((entityId, index) => {
+            ${entities.map((entry, index) => {
+              const entityId = entityIdOf(entry);
+              const override = entityCurrencyOverride(entry);
               const sensor = all.find((s) => s.entity_id === entityId);
               const name = sensor ? this._sensorName(sensor) : entityId;
               const symbol = sensor?.attributes.symbol ?? "";
               return html`
                 <div
                   class="selected-row ${this._dragIndex === index ? "dragging" : ""}"
-                  draggable="true"
-                  @dragstart=${(e: DragEvent) => this._onDragStart(e, index)}
                   @dragover=${(e: DragEvent) => this._onDragOver(e, index)}
-                  @dragend=${() => this._onDragEnd()}
                 >
-                  <span class="drag-handle">⠿</span>
+                  <span
+                    class="drag-handle"
+                    draggable="true"
+                    @dragstart=${(e: DragEvent) => this._onDragStart(e, index)}
+                    @dragend=${() => this._onDragEnd()}
+                  >⠿</span>
                   <span class="sensor-name">${name}</span>
                   <span class="sensor-meta">${symbol}</span>
+                  <select
+                    class="row-currency-select"
+                    title=${s.display_currency}
+                    .value=${override ?? ""}
+                    @change=${(e: Event) =>
+                      this._setEntityCurrency(index, (e.target as HTMLSelectElement).value)}
+                  >
+                    <option value="" ?selected=${!override}>${s.currency_inherit}</option>
+                    ${CURRENCIES.map(({ code, label }) => html`
+                      <option value=${code} ?selected=${override === code}>${label}</option>
+                    `)}
+                  </select>
                   <button class="remove-btn" @click=${() => this._removeEntity(entityId)}>✕</button>
                 </div>
               `;
@@ -252,7 +250,15 @@ export class EasyStockCardEditor extends LitElement {
 
   private _removeEntity(entityId: string): void {
     const current = this._config?.entities ?? [];
-    this._set("entities", current.filter((id) => id !== entityId));
+    this._set("entities", current.filter((e) => entityIdOf(e) !== entityId));
+  }
+
+  /** Set (or clear, when currency is "") the per-asset display-currency override. */
+  private _setEntityCurrency(index: number, currency: string): void {
+    const entities = [...(this._config?.entities ?? [])];
+    const id = entityIdOf(entities[index]);
+    entities[index] = currency ? { entity: id, display_currency: currency } : id;
+    this._set("entities", entities);
   }
 
   static styles = css`
@@ -325,7 +331,6 @@ export class EasyStockCardEditor extends LitElement {
       padding: 6px 8px;
       border-radius: 6px;
       background: var(--secondary-background-color);
-      cursor: grab;
       user-select: none;
     }
     .selected-row.dragging {
@@ -336,6 +341,17 @@ export class EasyStockCardEditor extends LitElement {
       color: var(--secondary-text-color);
       cursor: grab;
       flex-shrink: 0;
+    }
+    .row-currency-select {
+      flex-shrink: 0;
+      max-width: 96px;
+      padding: 2px 4px;
+      border: 1px solid var(--divider-color);
+      border-radius: 4px;
+      background: var(--card-background-color, #fff);
+      color: var(--primary-text-color);
+      font-size: 0.72rem;
+      cursor: pointer;
     }
     .remove-btn {
       background: none;
@@ -683,8 +699,8 @@ export class EasyStockCard extends LitElement {
         </div>
         <div class="card-content">
           <div class="asset-grid" style="grid-template-columns: repeat(auto-fill, minmax(${tileMinWidth}, 1fr))">
-            ${this._config.entities.map((entityId) =>
-              this._renderEntity(entityId)
+            ${this._config.entities.map((entry) =>
+              this._renderEntity(entry)
             )}
           </div>
         </div>
@@ -692,7 +708,9 @@ export class EasyStockCard extends LitElement {
     `;
   }
 
-  private _renderEntity(entityId: string) {
+  private _renderEntity(entry: EntityConfig) {
+    const entityId = entityIdOf(entry);
+    const currencyOverride = entityCurrencyOverride(entry);
     const raw = this._hass?.states[entityId];
     if (!raw) {
       return html`
@@ -709,11 +727,16 @@ export class EasyStockCard extends LitElement {
     const attr = entity.attributes;
     const displayName = (raw.attributes["friendly_name"] as string) || attr.long_name || attr.symbol;
     const nativeCurrency = attr.currency;
-    const targetCurrency = this._config?.display_currency ?? "EUR";
-    const hasRates = Object.keys(this._rates).length > 0;
+    const cardDefaultCurrency = this._config?.display_currency ?? "EUR";
+    const targetCurrency = resolveTargetCurrency(attr.symbol, currencyOverride, cardDefaultCurrency);
+    const isRaw = targetCurrency === RAW_CURRENCY;
     const price = parseFloat(entity.state);
-    const displayPrice = hasRates ? convertPrice(price, nativeCurrency, targetCurrency, this._rates) : price;
-    const displayCurrency = hasRates ? targetCurrency : nativeCurrency;
+    const { price: displayPrice, currency: displayCurrency } = resolveDisplay(
+      price,
+      nativeCurrency,
+      targetCurrency,
+      this._rates
+    );
     // Trigger async fetches (no-op if cached or already in flight)
     void this._fetchYahooHistory(attr.symbol);
     if (HA_HISTORY_RANGES.includes(this._timeRange)) {
@@ -736,7 +759,7 @@ export class EasyStockCard extends LitElement {
 
     const refRaw = chartData.length > 0 ? chartData[0][1] : null;
     const displayRefPrice = refRaw !== null
-      ? (hasRates ? convertPrice(refRaw, nativeCurrency, targetCurrency, this._rates) : refRaw)
+      ? resolveDisplay(refRaw, nativeCurrency, targetCurrency, this._rates).price
       : null;
     const showRef = displayRefPrice !== null && Math.abs(displayRefPrice - displayPrice) > 0.0001;
 
@@ -748,8 +771,8 @@ export class EasyStockCard extends LitElement {
         </div>
         <div class="asset-price">
           <div class="price-stack">
-            <span class="price">${this._formatPrice(displayPrice, displayCurrency)}</span>
-            ${showRef ? html`<span class="ref-price">${this._formatPrice(displayRefPrice!, displayCurrency)}</span>` : nothing}
+            <span class="price">${this._formatPrice(displayPrice, displayCurrency, isRaw)}</span>
+            ${showRef ? html`<span class="ref-price">${this._formatPrice(displayRefPrice!, displayCurrency, isRaw)}</span>` : nothing}
           </div>
           <span class="change" style="color:${trendColor}">
             <span class="arrow">${arrow}</span>${Math.abs(periodChange).toFixed(2)}%
@@ -822,14 +845,18 @@ export class EasyStockCard extends LitElement {
     `;
   }
 
-  private _formatPrice(price: number, currency: string): string {
+  private _formatPrice(price: number, currency: string, plain = false): string {
     if (isNaN(price)) return "–";
+    const maxDigits = price < 10 ? 4 : 2;
+    // RAW mode (or any non-ISO native code like "GBp"): show the value with the literal
+    // currency code rather than a localized symbol, so it stays unambiguous.
+    if (plain) return `${price.toFixed(maxDigits)} ${currency}`;
     try {
       return new Intl.NumberFormat(undefined, {
         style: "currency",
         currency,
         minimumFractionDigits: 2,
-        maximumFractionDigits: price < 10 ? 4 : 2,
+        maximumFractionDigits: maxDigits,
       }).format(price);
     } catch {
       return `${price.toFixed(2)} ${currency}`;

@@ -22,11 +22,15 @@ export interface LovelaceCardConfig {
 
 export type TimeRange = "1T" | "1W" | "1M" | "YTD" | "1J";
 
+// An entity entry is either a plain entity_id (no per-asset override) or an object
+// that pins a display currency for just that asset. Plain strings keep old configs valid.
+export type EntityConfig = string | { entity: string; display_currency?: string };
+
 export interface EasyStockCardConfig extends LovelaceCardConfig {
-  entities: string[];       // entity_ids of easy_stock sensors
+  entities: EntityConfig[]; // easy_stock sensors, optionally with a per-asset currency
   title?: string;
   default_range?: TimeRange;
-  display_currency?: string; // target display currency, default "EUR"
+  display_currency?: string; // card-level target display currency, default "EUR"
   tile_size?: "small" | "medium" | "large";
 }
 
