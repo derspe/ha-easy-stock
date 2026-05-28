@@ -1,4 +1,4 @@
-# Easy Stock — Home Assistant Integration
+  # Easy Stock — Home Assistant Integration
 
 > If you run into a problem, please [open an issue](https://github.com/derspe/ha-easy-stock/issues) so it can be tracked and fixed.
 
@@ -6,7 +6,7 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 
 **No API key required. Fully configured through the UI — no YAML needed.**
 
-![Easy Stock Card](assets/screenshot-card.png)
+![Easy Stock Card](https://raw.githubusercontent.com/derspe/ha-easy-stock/main/assets/screenshot-card.png)
 
 ## Features
 
@@ -17,7 +17,10 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
   - Sparkline charts for 5 time ranges: **1D · 1W · 1M · YTD · 1Y**
   - Short-term (1D/1W) charts use HA recorder data (resolution matches the configured poll interval)
   - Long-term charts (1M/YTD/1Y) use daily closing prices from Yahoo Finance
-  - **Currency conversion** — display all assets in a single currency (EUR, USD, GBP, CHF, AUD, CAD, JPY, SEK, NOK, DKK, CNY, HKD); rates refreshed every 15 minutes from [frankfurter.app](https://frankfurter.app), with automatic fallback to the last known rates if the source is temporarily unavailable
+  - **Currency conversion** — display all assets in a single currency (EUR, USD, GBP, CHF, AUD, CAD, JPY, SEK, NOK, DKK, CNY, HKD), or **RAW** to show each asset in its native currency without conversion; rates refreshed every 15 minutes from [frankfurter.dev](https://frankfurter.dev), with automatic fallback to the last known rates if the source is temporarily unavailable
+    - **Per-asset override** — pin a single asset to its own display currency (e.g. keep one fund in GBP while the rest of the card shows EUR), configurable per row in the visual editor
+    - **London Stock Exchange (GBp/GBX)** — equities quoted in pence are automatically normalized to GBP before conversion, so values match what you see on the exchange
+    - **FX-rate symbols (`…=X`)** — auto-detected and never converted, the quote is always shown as-is
   - **Reference price** — period baseline shown below the current price (e.g. previous close for 1D, period start for 1W/1M/YTD/1Y)
   - **Click any tile** to open the HA sensor detail dialog
   - **Tile size** — choose S / M / L in the visual editor to control how many tiles fit per row
@@ -29,7 +32,7 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 ## Requirements
 
 - Home Assistant 2023.x or newer
-- Internet access (Yahoo Finance API + frankfurter.app for currency rates)
+- Internet access (Yahoo Finance API + frankfurter.dev for currency rates)
 
 ## Installation
 
@@ -67,7 +70,7 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 
 Repeat for each asset you want to track. Each asset becomes its own sensor entity.
 
-![Add Integration](assets/screenshot-integration.png)
+![Add Integration](https://raw.githubusercontent.com/derspe/ha-easy-stock/main/assets/screenshot-integration.png)
 
 ### Finding the right symbol
 
@@ -107,7 +110,7 @@ Each sensor additionally exposes the following state attributes:
 
 The card is automatically registered when the integration loads — no manual resource configuration needed.
 
-![Card Editor](assets/screenshot-editor.png)
+![Card Editor](https://raw.githubusercontent.com/derspe/ha-easy-stock/main/assets/screenshot-editor.png)
 
 ### Add to dashboard
 
@@ -119,14 +122,18 @@ The card is automatically registered when the integration loads — no manual re
 ```yaml
 type: custom:easy-stock-card
 title: My Portfolio          # optional
-display_currency: EUR        # optional — EUR (default), USD, GBP, CHF, AUD, CAD, JPY, SEK, NOK, DKK, CNY, HKD
+display_currency: EUR        # optional — EUR (default), USD, GBP, CHF, AUD, CAD, JPY, SEK, NOK, DKK, CNY, HKD, RAW
 default_range: "1T"          # optional — 1T (1D), 1W, 1M, YTD, 1J (1Y) — default: 1T
 tile_size: small             # optional — small (default), medium, large
 entities:
-  - sensor.aapl
+  - sensor.aapl                                          # use the card-level display_currency
   - sensor.iwda_as
+  - entity: sensor.vusa_l                                # per-asset override — show this one in GBP
+    display_currency: GBP
   - sensor.btc_eur
 ```
+
+> **Resolution order** for the displayed currency of a tile: per-asset override (if set) → FX-rate auto-detect (for `…=X` symbols, never converted) → card-level `display_currency` → `EUR` default. `RAW` (card-level or per-asset) bypasses conversion entirely and shows the value in the asset's native trading currency.
 
 ### Time ranges
 
@@ -152,7 +159,11 @@ entities:
 - Ensure the `recorder` integration is enabled in your `configuration.yaml`
 
 **Currency conversion not working**
-- The card fetches rates from [frankfurter.app](https://frankfurter.app) (European Central Bank data) — ensure your HA instance has internet access
+- The card fetches rates from [frankfurter.dev](https://frankfurter.dev) (European Central Bank data) — ensure your HA instance has internet access
+- To intentionally turn conversion off (for a single asset or the whole card), set `display_currency` to `RAW`
+
+**LSE share price looks 100× too high**
+- This used to happen because the London Stock Exchange quotes most equities in pence (`GBp` / `GBX`). Easy Stock now normalizes pence to pounds automatically before conversion, so values should match the price you see on the exchange. If you still see a wrong value, please [open an issue](https://github.com/derspe/ha-easy-stock/issues) with the affected ticker.
 
 **Wrong display name**
 - Set a custom **Name** in the integration configuration (Settings → Devices & Services → Easy Stock → Configure)
