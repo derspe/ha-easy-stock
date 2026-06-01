@@ -1,12 +1,14 @@
 {
   "domain": "easy_stock",
   "name": "Easy Stock",
+  "after_dependencies": [
+    "frontend"
+  ],
   "codeowners": [
     "@derspe"
   ],
   "config_flow": true,
   "dependencies": [
-    "frontend",
     "http"
   ],
   "documentation": "https://github.com/derspe/ha-easy-stock",
