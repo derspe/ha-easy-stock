@@ -166,3 +166,48 @@ async def test_unregister_removes_the_resource(hass):
     await resources.async_get_info()
     assert _card_items(resources) == []
     assert DATA_FRONTEND not in hass.data
+
+
+async def test_removing_one_of_several_keeps_the_resource(hass):
+    """The card must survive as long as any entry remains.
+
+    Home Assistant deletes the entry from the registry *before* it calls
+    async_remove_entry (`del self._entries[...]` then `await
+    entry.async_remove(...)` in ConfigEntries._async_remove), so the entry
+    being removed is already absent and only the survivors are visible here.
+    The removed entry is therefore deliberately never added to hass.
+    """
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    from custom_components.easy_stock import async_remove_entry
+    from custom_components.easy_stock.const import DOMAIN as EASY_STOCK
+
+    resources = await _setup_storage_mode(hass)
+    await async_register_card(hass)
+
+    remaining = MockConfigEntry(domain=EASY_STOCK, data={"symbol": "AAPL"})
+    remaining.add_to_hass(hass)
+    removed = MockConfigEntry(domain=EASY_STOCK, data={"symbol": "MSFT"})
+
+    await async_remove_entry(hass, removed)
+
+    await resources.async_get_info()
+    assert len(_card_items(resources)) == 1
+
+
+async def test_removing_the_last_entry_drops_the_resource(hass):
+    """With no entries left in the registry, the resource is deleted."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    from custom_components.easy_stock import async_remove_entry
+    from custom_components.easy_stock.const import DOMAIN as EASY_STOCK
+
+    resources = await _setup_storage_mode(hass)
+    await async_register_card(hass)
+
+    removed = MockConfigEntry(domain=EASY_STOCK, data={"symbol": "AAPL"})
+
+    await async_remove_entry(hass, removed)
+
+    await resources.async_get_info()
+    assert _card_items(resources) == []

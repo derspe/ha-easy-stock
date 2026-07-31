@@ -5,7 +5,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, CONF_SYMBOL, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
 from .coordinator import StockDataCoordinator
-from .frontend import async_register_card
+from .frontend import async_register_card, async_unregister_card
 
 PLATFORMS = ["sensor"]
 
@@ -63,9 +63,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
     return unload_ok
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Drop the card registration once the last entry is gone."""
+    if hass.config_entries.async_entries(DOMAIN):
+        return
+    await async_unregister_card(hass)
