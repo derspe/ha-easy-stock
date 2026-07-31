@@ -66,6 +66,28 @@ async def test_second_call_is_a_no_op(hass):
     assert items[0]["url"] == first_url
 
 
+async def test_duplicate_entries_are_healed_to_one(hass):
+    """Two pre-existing matching entries are healed down to a single, current one."""
+    resources = await _setup_storage_mode(hass)
+    await resources.async_create_item(
+        {"res_type": "module", "url": f"{CARD_URL_BASE}?v=aaaaaaaa"}
+    )
+    await resources.async_create_item(
+        {"res_type": "module", "url": f"{CARD_URL_BASE}?v=bbbbbbbb"}
+    )
+
+    await async_register_card(hass)
+
+    await resources.async_get_info()
+    items = _card_items(resources)
+    assert len(items) == 1
+    assert items[0]["url"] == hass.data[DATA_FRONTEND]["url"]
+    assert items[0]["url"] not in (
+        f"{CARD_URL_BASE}?v=aaaaaaaa",
+        f"{CARD_URL_BASE}?v=bbbbbbbb",
+    )
+
+
 async def test_yaml_resource_mode_falls_back_to_extra_js(hass):
     """YAML resource mode cannot be written, so use add_extra_js_url."""
     assert await async_setup_component(hass, "http", {})
@@ -117,6 +139,19 @@ async def test_unregister_missing_frontend_does_not_raise(hass):
         side_effect=KeyError("frontend_extra_module_url"),
     ):
         await async_unregister_card(hass)  # must not raise
+
+    assert DATA_FRONTEND not in hass.data
+
+
+async def test_unregister_when_already_deleted_does_not_raise(hass):
+    """If the resource was already removed (e.g. by the user), unregister must not raise."""
+    resources = await _setup_storage_mode(hass)
+    await async_register_card(hass)
+
+    resource_id = hass.data[DATA_FRONTEND]["resource_id"]
+    await resources.async_delete_item(resource_id)
+
+    await async_unregister_card(hass)  # must not raise
 
     assert DATA_FRONTEND not in hass.data
 

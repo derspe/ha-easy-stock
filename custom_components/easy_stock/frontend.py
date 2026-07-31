@@ -10,6 +10,7 @@ from homeassistant.components.frontend import add_extra_js_url, remove_extra_js_
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.lovelace.const import LOVELACE_DATA, MODE_STORAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.collection import ItemNotFound
 
 from .const import DOMAIN
 
@@ -81,15 +82,21 @@ async def async_register_card(hass: HomeAssistant) -> None:
         return
 
     await resources.async_get_info()
-    for item in resources.async_items():
-        if not item.get("url", "").startswith(CARD_URL_BASE):
-            continue
+    matches = [
+        item
+        for item in resources.async_items()
+        if item.get("url", "").startswith(CARD_URL_BASE)
+    ]
+    for extra in matches[1:]:
+        await resources.async_delete_item(extra["id"])
+
+    if matches:
+        item = matches[0]
         hass.data[DATA_FRONTEND]["resource_id"] = item["id"]
-        if item["url"] == url:
-            return
-        await resources.async_update_item(
-            item["id"], {"res_type": "module", "url": url}
-        )
+        if item["url"] != url:
+            await resources.async_update_item(
+                item["id"], {"res_type": "module", "url": url}
+            )
         return
 
     created = await resources.async_create_item({"res_type": "module", "url": url})
@@ -110,4 +117,9 @@ async def async_unregister_card(hass: HomeAssistant) -> None:
     resources = _writable_resources(hass)
     if resources is None:
         return
-    await resources.async_delete_item(resource_id)
+    try:
+        await resources.async_delete_item(resource_id)
+    except ItemNotFound:
+        _LOGGER.debug(
+            "Resource %s was already removed from the dashboard.", resource_id
+        )
