@@ -1,5 +1,5 @@
 import { LitElement, html, css, nothing, svg } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import type {
   HomeAssistant,
   EasyStockCardConfig,
@@ -53,12 +53,14 @@ async function fetchRates(): Promise<Record<string, number>> {
 // ---------------------------------------------------------------------------
 
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "easy-stock-card",
-  name: "Easy Stock Card",
-  description: "Displays stock prices from the Easy Stock integration with sparkline charts.",
-  preview: true,
-});
+if (!window.customCards.some((c) => c.type === "easy-stock-card")) {
+  window.customCards.push({
+    type: "easy-stock-card",
+    name: "Easy Stock Card",
+    description: "Displays stock prices from the Easy Stock integration with sparkline charts.",
+    preview: true,
+  });
+}
 
 const TILE_MIN_WIDTHS: Record<string, string> = {
   small: "170px",
@@ -78,7 +80,6 @@ const RANGES: { value: TimeRange; label: string }[] = [
 // Editor
 // ---------------------------------------------------------------------------
 
-@customElement("easy-stock-card-editor")
 export class EasyStockCardEditor extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
   @state() private _config?: EasyStockCardConfig;
@@ -422,7 +423,6 @@ interface HaHistoryCacheEntry {
 const HA_HISTORY_TTL = 5 * 60 * 1000; // 5 min — matches sensor update interval
 const HA_HISTORY_RANGES: TimeRange[] = ["1T", "1W"];
 
-@customElement("easy-stock-card")
 export class EasyStockCard extends LitElement {
   private _hass?: HomeAssistant;
   @state() private _config?: EasyStockCardConfig;
@@ -986,6 +986,13 @@ export class EasyStockCard extends LitElement {
     }
     .error { color: var(--error-color, #f44336); }
   `;
+}
+
+if (!customElements.get("easy-stock-card-editor")) {
+  customElements.define("easy-stock-card-editor", EasyStockCardEditor);
+}
+if (!customElements.get("easy-stock-card")) {
+  customElements.define("easy-stock-card", EasyStockCard);
 }
 
 declare global {
