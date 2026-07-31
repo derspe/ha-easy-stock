@@ -31,7 +31,8 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 
 ## Requirements
 
-- Home Assistant 2023.x or newer
+- Home Assistant 2024.7 or newer (the integration serves the card through
+  `async_register_static_paths`, which older cores do not have)
 - Internet access (Yahoo Finance API + frankfurter.dev for currency rates)
 
 ## Installation
@@ -56,20 +57,35 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 
 ### The card does not appear
 
-The integration registers the card automatically. If it is still missing:
+The integration registers the card itself — as a dashboard resource when your Lovelace resources
+are in storage mode (the default), and by injecting it through the frontend when they are in YAML
+mode, where the resource list is read-only. You should never have to add a resource by hand.
+
+If the card is still missing:
 
 1. Confirm Easy Stock is listed under **Settings → Devices & Services**. Without a configured
    entry the integration never starts, and the card is not served at all.
-2. Check **Settings → Dashboards → ⋮ → Resources** for an entry pointing at
-   `/easy_stock/easy-stock-card.js`.
-3. If your Lovelace resources are in YAML mode, add it yourself:
+2. Open your browser's developer console and reload the dashboard. The card logs one line on
+   load: `[easy-stock-card] v0.4.0 loaded from /easy_stock/easy-stock-card.js?v=…`.
+   - **No such line** — the browser never loaded the file. Continue with step 3.
+   - **Two such lines** — a second, probably stale copy is registered. The card also warns which
+     copy was ignored. Remove the duplicate under **Settings → Dashboards → ⋮ → Resources**
+     (usually a leftover `/local/easy-stock-card.js` from an older manual install).
+3. Check **Settings → Dashboards → ⋮ → Resources** for an entry pointing at
+   `/easy_stock/easy-stock-card.js?v=…`. If it is missing, search your Home Assistant log for
+   `easy_stock.frontend` — it records on every start whether the card was registered as a
+   dashboard resource, or why it fell back to the frontend injection.
+4. Force a reload past the browser and service-worker cache: **Ctrl+Shift+R** (**Cmd+Shift+R** on
+   macOS), or open the dashboard in a private window to rule caching out entirely.
 
-   ```yaml
-   lovelace:
-     resources:
-       - url: /easy_stock/easy-stock-card.js
-         type: module
-   ```
+If none of that helps, please [open an issue](https://github.com/derspe/ha-easy-stock/issues) and
+include the console line from step 2 and the `easy_stock.frontend` log lines from step 3.
+
+> **Adding the resource manually is a last resort.** If you do, use the plain URL
+> `/easy_stock/easy-stock-card.js` — but note it carries no `?v=<hash>` cache-buster, and the file
+> is served with a 31-day cache header. After an update you will keep getting the old card until
+> you hard-refresh every browser that has it cached. Remove the manual entry once the automatic
+> registration works again.
 
 ## Setup
 
@@ -165,6 +181,12 @@ entities:
 > **Note:** 1D and 1W charts use HA recorder data. Resolution depends on the configured poll interval (default: 15 min). Until enough history has accumulated, the card falls back automatically: the 1D chart shows a two-point line from the previous close to the current price; the 1W chart uses the last 4 daily closes from Yahoo Finance. Full resolution for the 1W view builds up over 7 days. Charts for 1M, YTD, and 1Y are sourced entirely from Yahoo Finance and are available from the first update.
 
 ## Troubleshooting
+
+**The card does not appear / "Custom element doesn't exist: easy-stock-card"**
+- See [The card does not appear](#the-card-does-not-appear) under Installation for the full
+  checklist — the quick version is: check the browser console for the card's
+  `[easy-stock-card] v… loaded from …` line, then hard-refresh with **Ctrl+Shift+R**
+  (**Cmd+Shift+R** on macOS) to get past a stale service-worker cache
 
 **No data / sensor unavailable**
 - Verify the ticker symbol is correct on [finance.yahoo.com](https://finance.yahoo.com)
