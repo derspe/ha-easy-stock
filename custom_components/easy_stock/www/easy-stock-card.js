@@ -1008,6 +1008,9 @@ async function fetchRates() {
     _rateFetchInFlight = false;
   }
 }
+console.info(
+  `[easy-stock-card] v${"0.4.0"} loaded from ${import.meta.url}`
+);
 window.customCards = window.customCards || [];
 if (!window.customCards.some((c2) => c2.type === "easy-stock-card")) {
   window.customCards.push({
@@ -1834,12 +1837,17 @@ __decorateClass([
 __decorateClass([
   r()
 ], EasyStockCard.prototype, "_rates");
-if (!customElements.get("easy-stock-card-editor")) {
-  customElements.define("easy-stock-card-editor", EasyStockCardEditor);
+function defineOnce(tag, ctor) {
+  if (customElements.get(tag)) {
+    console.warn(
+      `[easy-stock-card] <${tag}> is already registered by another copy of this card, so this copy was ignored: ${import.meta.url}. The copy that loaded first wins, which may be an older build. Check Settings > Dashboards > three-dot menu > Resources for a duplicate entry (a leftover /local/easy-stock-card.js is the usual cause) and remove it.`
+    );
+    return;
+  }
+  customElements.define(tag, ctor);
 }
-if (!customElements.get("easy-stock-card")) {
-  customElements.define("easy-stock-card", EasyStockCard);
-}
+defineOnce("easy-stock-card-editor", EasyStockCardEditor);
+defineOnce("easy-stock-card", EasyStockCard);
 export {
   EasyStockCard,
   EasyStockCardEditor
