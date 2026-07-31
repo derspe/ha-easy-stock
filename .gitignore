@@ -1,5 +1,6 @@
 # Build output (Vite intermediate)
 dist/
+.tmp-card-tests/
 
 # Node
 node_modules/

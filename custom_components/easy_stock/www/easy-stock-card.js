@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 var _a;
-const t$3 = globalThis, e$2 = t$3.ShadowRoot && (void 0 === t$3.ShadyCSS || t$3.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, s$2 = Symbol(), o$4 = /* @__PURE__ */ new WeakMap();
+const t$2 = globalThis, e$2 = t$2.ShadowRoot && (void 0 === t$2.ShadyCSS || t$2.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, s$2 = Symbol(), o$4 = /* @__PURE__ */ new WeakMap();
 let n$3 = class n {
   constructor(t2, e2, o2) {
     if (this._$cssResult$ = true, o2 !== s$2) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
@@ -33,7 +33,7 @@ const r$4 = (t2) => new n$3("string" == typeof t2 ? t2 : t2 + "", void 0, s$2), 
 }, S$1 = (s2, o2) => {
   if (e$2) s2.adoptedStyleSheets = o2.map((t2) => t2 instanceof CSSStyleSheet ? t2 : t2.styleSheet);
   else for (const e2 of o2) {
-    const o3 = document.createElement("style"), n3 = t$3.litNonce;
+    const o3 = document.createElement("style"), n3 = t$2.litNonce;
     void 0 !== n3 && o3.setAttribute("nonce", n3), o3.textContent = e2.cssText, s2.appendChild(o3);
   }
 }, c$2 = e$2 ? (t2) => t2 : (t2) => t2 instanceof CSSStyleSheet ? ((t3) => {
@@ -285,7 +285,7 @@ y$1.elementStyles = [], y$1.shadowRootOptions = { mode: "open" }, y$1[d$1("eleme
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const t$2 = globalThis, i$1 = (t2) => t2, s$1 = t$2.trustedTypes, e = s$1 ? s$1.createPolicy("lit-html", { createHTML: (t2) => t2 }) : void 0, h = "$lit$", o$2 = `lit$${Math.random().toFixed(9).slice(2)}$`, n$1 = "?" + o$2, r$2 = `<${n$1}>`, l = document, c = () => l.createComment(""), a = (t2) => null === t2 || "object" != typeof t2 && "function" != typeof t2, u = Array.isArray, d = (t2) => u(t2) || "function" == typeof (t2 == null ? void 0 : t2[Symbol.iterator]), f = "[ 	\n\f\r]", v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, _ = /-->/g, m = />/g, p = RegExp(`>|${f}(?:([^\\s"'>=/]+)(${f}*=${f}*(?:[^ 	
+const t$1 = globalThis, i$1 = (t2) => t2, s$1 = t$1.trustedTypes, e = s$1 ? s$1.createPolicy("lit-html", { createHTML: (t2) => t2 }) : void 0, h = "$lit$", o$2 = `lit$${Math.random().toFixed(9).slice(2)}$`, n$1 = "?" + o$2, r$2 = `<${n$1}>`, l = document, c = () => l.createComment(""), a = (t2) => null === t2 || "object" != typeof t2 && "function" != typeof t2, u = Array.isArray, d = (t2) => u(t2) || "function" == typeof (t2 == null ? void 0 : t2[Symbol.iterator]), f = "[ 	\n\f\r]", v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, _ = /-->/g, m = />/g, p = RegExp(`>|${f}(?:([^\\s"'>=/]+)(${f}*=${f}*(?:[^ 	
 \f\r"'\`<>=]|("|')|))|$)`, "g"), g = /'/g, $ = /"/g, y2 = /^(?:script|style|textarea|title)$/i, x = (t2) => (i2, ...s2) => ({ _$litType$: t2, strings: i2, values: s2 }), b = x(1), w = x(2), E = Symbol.for("lit-noChange"), A = Symbol.for("lit-nothing"), C = /* @__PURE__ */ new WeakMap(), P = l.createTreeWalker(l, 129);
 function V(t2, i2) {
   if (!u(t2) || !t2.hasOwnProperty("raw")) throw Error("invalid template strings array");
@@ -504,8 +504,8 @@ class Z {
     M(this, t2);
   }
 }
-const B = t$2.litHtmlPolyfillSupport;
-B == null ? void 0 : B(S, k), (t$2.litHtmlVersions ?? (t$2.litHtmlVersions = [])).push("3.3.2");
+const B = t$1.litHtmlPolyfillSupport;
+B == null ? void 0 : B(S, k), (t$1.litHtmlVersions ?? (t$1.litHtmlVersions = [])).push("3.3.2");
 const D = (t2, i2, s2) => {
   const e2 = (s2 == null ? void 0 : s2.renderBefore) ?? i2;
   let h2 = e2._$litPart$;
@@ -550,16 +550,6 @@ i._$litElement$ = true, i["finalized"] = true, (_a = s.litElementHydrateSupport)
 const o$1 = s.litElementPolyfillSupport;
 o$1 == null ? void 0 : o$1({ LitElement: i });
 (s.litElementVersions ?? (s.litElementVersions = [])).push("4.2.2");
-/**
- * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */
-const t$1 = (t2) => (e2, o2) => {
-  void 0 !== o2 ? o2.addInitializer(() => {
-    customElements.define(t2, e2);
-  }) : customElements.define(t2, e2);
-};
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -985,13 +975,12 @@ function entityCurrencyOverride(entry) {
   return typeof entry === "string" ? void 0 : entry.display_currency;
 }
 var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __decorateClass = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
+  var result = void 0;
   for (var i2 = decorators.length - 1, decorator; i2 >= 0; i2--)
     if (decorator = decorators[i2])
-      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
-  if (kind && result) __defProp(target, key, result);
+      result = decorator(target, key, result) || result;
+  if (result) __defProp(target, key, result);
   return result;
 };
 let _rateCache = null;
@@ -1019,13 +1008,18 @@ async function fetchRates() {
     _rateFetchInFlight = false;
   }
 }
+console.info(
+  `[easy-stock-card] v${"0.4.0"} loaded from ${import.meta.url}`
+);
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "easy-stock-card",
-  name: "Easy Stock Card",
-  description: "Displays stock prices from the Easy Stock integration with sparkline charts.",
-  preview: true
-});
+if (!window.customCards.some((c2) => c2.type === "easy-stock-card")) {
+  window.customCards.push({
+    type: "easy-stock-card",
+    name: "Easy Stock Card",
+    description: "Displays stock prices from the Easy Stock integration with sparkline charts.",
+    preview: true
+  });
+}
 const TILE_MIN_WIDTHS = {
   small: "170px",
   medium: "220px",
@@ -1038,7 +1032,7 @@ const RANGES = [
   { value: "YTD", label: "YTD" },
   { value: "1J", label: "1Y" }
 ];
-let EasyStockCardEditor = class extends i {
+const _EasyStockCardEditor = class _EasyStockCardEditor extends i {
   constructor() {
     super(...arguments);
     this._dragIndex = null;
@@ -1213,7 +1207,7 @@ let EasyStockCardEditor = class extends i {
     this._set("entities", entities);
   }
 };
-EasyStockCardEditor.styles = i$3`
+_EasyStockCardEditor.styles = i$3`
     .editor {
       display: flex;
       flex-direction: column;
@@ -1355,21 +1349,19 @@ EasyStockCardEditor.styles = i$3`
       margin: 4px 0;
     }
   `;
+let EasyStockCardEditor = _EasyStockCardEditor;
 __decorateClass([
   n2({ attribute: false })
-], EasyStockCardEditor.prototype, "hass", 2);
+], EasyStockCardEditor.prototype, "hass");
 __decorateClass([
   r()
-], EasyStockCardEditor.prototype, "_config", 2);
+], EasyStockCardEditor.prototype, "_config");
 __decorateClass([
   r()
-], EasyStockCardEditor.prototype, "_dragIndex", 2);
-EasyStockCardEditor = __decorateClass([
-  t$1("easy-stock-card-editor")
-], EasyStockCardEditor);
+], EasyStockCardEditor.prototype, "_dragIndex");
 const HA_HISTORY_TTL = 5 * 60 * 1e3;
 const HA_HISTORY_RANGES = ["1T", "1W"];
-let EasyStockCard = class extends i {
+const _EasyStockCard = class _EasyStockCard extends i {
   constructor() {
     super(...arguments);
     this._timeRange = "1T";
@@ -1712,7 +1704,7 @@ let EasyStockCard = class extends i {
     }
   }
 };
-EasyStockCard.styles = i$3`
+_EasyStockCard.styles = i$3`
     ha-card { height: 100%; }
 
     .card-top {
@@ -1835,18 +1827,27 @@ EasyStockCard.styles = i$3`
     }
     .error { color: var(--error-color, #f44336); }
   `;
+let EasyStockCard = _EasyStockCard;
 __decorateClass([
   r()
-], EasyStockCard.prototype, "_config", 2);
+], EasyStockCard.prototype, "_config");
 __decorateClass([
   r()
-], EasyStockCard.prototype, "_timeRange", 2);
+], EasyStockCard.prototype, "_timeRange");
 __decorateClass([
   r()
-], EasyStockCard.prototype, "_rates", 2);
-EasyStockCard = __decorateClass([
-  t$1("easy-stock-card")
-], EasyStockCard);
+], EasyStockCard.prototype, "_rates");
+function defineOnce(tag, ctor) {
+  if (customElements.get(tag)) {
+    console.warn(
+      `[easy-stock-card] <${tag}> is already registered by another copy of this card, so this copy was ignored: ${import.meta.url}. The copy that loaded first wins, which may be an older build. Check Settings > Dashboards > three-dot menu > Resources for a duplicate entry (a leftover /local/easy-stock-card.js is the usual cause) and remove it.`
+    );
+    return;
+  }
+  customElements.define(tag, ctor);
+}
+defineOnce("easy-stock-card-editor", EasyStockCardEditor);
+defineOnce("easy-stock-card", EasyStockCard);
 export {
   EasyStockCard,
   EasyStockCardEditor

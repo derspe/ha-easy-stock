@@ -1,5 +1,5 @@
 import { LitElement, html, css, nothing, svg } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { property, state } from "lit/decorators.js";
 import type {
   HomeAssistant,
   EasyStockCardConfig,
@@ -49,16 +49,35 @@ async function fetchRates(): Promise<Record<string, number>> {
 }
 
 // ---------------------------------------------------------------------------
+// Build identity
+// ---------------------------------------------------------------------------
+
+// Injected by vite.config.ts from custom_components/easy_stock/manifest.json,
+// so it can never drift from the released version.
+declare const __CARD_VERSION__: string;
+
+// One line per evaluated copy of this module. The integration appends a
+// ?v=<md5> cache-buster to the resource URL, so import.meta.url identifies the
+// exact bundle the browser loaded — the single most useful fact when someone
+// reports the card missing or behaving like an older release. Two of these
+// lines means two copies are registered.
+console.info(
+  `[easy-stock-card] v${__CARD_VERSION__} loaded from ${import.meta.url}`,
+);
+
+// ---------------------------------------------------------------------------
 // Card registry
 // ---------------------------------------------------------------------------
 
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "easy-stock-card",
-  name: "Easy Stock Card",
-  description: "Displays stock prices from the Easy Stock integration with sparkline charts.",
-  preview: true,
-});
+if (!window.customCards.some((c) => c.type === "easy-stock-card")) {
+  window.customCards.push({
+    type: "easy-stock-card",
+    name: "Easy Stock Card",
+    description: "Displays stock prices from the Easy Stock integration with sparkline charts.",
+    preview: true,
+  });
+}
 
 const TILE_MIN_WIDTHS: Record<string, string> = {
   small: "170px",
@@ -78,7 +97,6 @@ const RANGES: { value: TimeRange; label: string }[] = [
 // Editor
 // ---------------------------------------------------------------------------
 
-@customElement("easy-stock-card-editor")
 export class EasyStockCardEditor extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
   @state() private _config?: EasyStockCardConfig;
@@ -422,7 +440,6 @@ interface HaHistoryCacheEntry {
 const HA_HISTORY_TTL = 5 * 60 * 1000; // 5 min — matches sensor update interval
 const HA_HISTORY_RANGES: TimeRange[] = ["1T", "1W"];
 
-@customElement("easy-stock-card")
 export class EasyStockCard extends LitElement {
   private _hass?: HomeAssistant;
   @state() private _config?: EasyStockCardConfig;
@@ -987,6 +1004,34 @@ export class EasyStockCard extends LitElement {
     .error { color: var(--error-color, #f44336); }
   `;
 }
+
+/**
+ * Define `tag` unless something else already claimed it.
+ *
+ * A bare customElements.define() throws NotSupportedError on the second
+ * evaluation, which breaks the rest of this module. Swallowing that silently
+ * is worse though: the *first* copy loaded wins, so a user with a stale
+ * duplicate resource (e.g. a leftover /local/easy-stock-card.js from a manual
+ * install) keeps running the old card after upgrading, with nothing anywhere
+ * to explain it. The warning names the copy that lost.
+ */
+function defineOnce(tag: string, ctor: CustomElementConstructor): void {
+  if (customElements.get(tag)) {
+    console.warn(
+      `[easy-stock-card] <${tag}> is already registered by another copy of ` +
+        `this card, so this copy was ignored: ${import.meta.url}. The copy ` +
+        `that loaded first wins, which may be an older build. Check Settings ` +
+        `> Dashboards > three-dot menu > Resources for a duplicate entry ` +
+        `(a leftover /local/easy-stock-card.js is the usual cause) and ` +
+        `remove it.`,
+    );
+    return;
+  }
+  customElements.define(tag, ctor);
+}
+
+defineOnce("easy-stock-card-editor", EasyStockCardEditor);
+defineOnce("easy-stock-card", EasyStockCard);
 
 declare global {
   interface Window {

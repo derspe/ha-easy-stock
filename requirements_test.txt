@@ -1,3 +1,12 @@
 pytest>=8.0
 pytest-asyncio>=0.23
-pytest-homeassistant-custom-component>=0.13
+# Pinned on purpose. Every release of this package pins one exact Home
+# Assistant core, so an unpinned range makes CI silently follow core -- betas
+# included. That has teeth here: core derives the Lovelace resource mode as
+# `config[DOMAIN].get(CONF_RESOURCE_MODE, mode)` behind a "Remove mode fallback
+# in 2026.8" comment, so dropping that fallback could turn CI red with no code
+# change of ours, at an unpredictable moment.
+# 0.13.348 == Home Assistant 2026.7.4, the newest stable core (0.13.349 and up
+# ship 2026.8 betas). Needs Python >= 3.14 -- keep
+# .github/workflows/tests.yml in step when bumping this.
+pytest-homeassistant-custom-component==0.13.348

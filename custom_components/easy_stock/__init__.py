@@ -1,14 +1,20 @@
-import hashlib
-from pathlib import Path
+import logging
 
-from homeassistant.components.frontend import add_extra_js_url
-from homeassistant.components.http import HomeAssistantView, StaticPathConfig
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, CONF_SYMBOL, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
 from .coordinator import StockDataCoordinator
+from .frontend import (
+    CARD_URL_BASE,
+    DATA_FRONTEND,
+    async_register_card,
+    async_unregister_card,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 
@@ -33,19 +39,33 @@ class EasyStockHistoryView(HomeAssistantView):
         return self.json_message(f"No sensor for symbol {symbol}", status_code=404)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Register static path, Lovelace resource, and history REST endpoint once per domain."""
-    await hass.http.async_register_static_paths([
-        StaticPathConfig(
-            f"/{DOMAIN}",
-            str(Path(__file__).parent / "www"),
-            cache_headers=False,
+async def _async_register_card_safely(hass: HomeAssistant) -> None:
+    """Register the card without ever letting a card problem break setup.
+
+    An exception raised out of a component's async_setup makes
+    _async_setup_component log it and return False. The domain then never
+    enters hass.config.components and *every* config entry fails, so a
+    frontend detail would cost the user all of their sensors. Card
+    registration reads and validates the Lovelace resource store, writes to
+    it, and hashes a file that a truncated HACS download can leave missing --
+    plenty of ways to raise for something the sensors do not depend on.
+    """
+    try:
+        await async_register_card(hass)
+    except Exception:  # noqa: BLE001 - deliberately broad, see docstring
+        _LOGGER.exception(
+            "Easy Stock could not register its Lovelace card. Your sensors are "
+            "unaffected and keep updating normally; only the custom card may "
+            "be missing from dashboards. As a workaround, add %s as a "
+            "dashboard resource of type 'module' under Settings > Dashboards > "
+            "Resources",
+            CARD_URL_BASE,
         )
-    ])
-    js_path = Path(__file__).parent / "www" / "easy-stock-card.js"
-    js_bytes = await hass.async_add_executor_job(js_path.read_bytes)
-    file_hash = hashlib.md5(js_bytes).hexdigest()[:8]
-    add_extra_js_url(hass, f"/{DOMAIN}/easy-stock-card.js?v={file_hash}")
+
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Register the card, the shared data store and the history endpoint."""
+    await _async_register_card_safely(hass)
     hass.data.setdefault(DOMAIN, {})
     hass.http.register_view(EasyStockHistoryView())
     return True
@@ -53,6 +73,18 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
+
+    # Removing the last config entry unregisters the card but does not unload
+    # the component: ConfigEntries._async_remove never touches
+    # hass.config.components, so adding an entry back afterwards takes
+    # ConfigEntries.async_setup's `entry.domain in components` branch and only
+    # runs entry.async_setup. The module-level async_setup above never runs
+    # again, so without this the card would stay gone until a restart.
+    # The guard matters: hass.http.async_register_static_paths appends to the
+    # aiohttp route table on every call, so an unconditional call here would
+    # add litter for every entry.
+    if DATA_FRONTEND not in hass.data:
+        await _async_register_card_safely(hass)
 
     symbol = entry.data[CONF_SYMBOL]
     scan_interval = entry.options.get(
@@ -76,9 +108,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
     return unload_ok
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Drop the card registration once the last entry is gone."""
+    if hass.config_entries.async_entries(DOMAIN):
+        return
+    await async_unregister_card(hass)

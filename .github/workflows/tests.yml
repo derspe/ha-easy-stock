@@ -10,13 +10,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Home Assistant cores from 2026.x require Python 3.14. On 3.12 pip
+      # silently resolved pytest-homeassistant-custom-component down to a core
+      # from 2025.1, where homeassistant.components.lovelace.const has no
+      # LOVELACE_DATA -- the whole suite failed to collect with an ImportError.
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install dependencies
         run: pip install -r requirements_test.txt
 
       - name: Run pytest
         run: pytest
+
+  js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build card
+        run: npm run build
+
+      - name: Fail if the committed bundle is stale
+        run: git diff --exit-code custom_components/easy_stock/www/
+
+      - name: Run vitest
+        run: npm test

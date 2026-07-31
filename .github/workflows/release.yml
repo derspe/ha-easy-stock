@@ -24,14 +24,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build card JS
-        run: npm run build
-
+      # Must run before the build: vite reads the version out of manifest.json
+      # and bakes it into the banner the card logs, so bumping afterwards would
+      # ship a bundle announcing the previous release.
       - name: Update version in manifest.json
         run: |
           jq --arg v "${{ github.event.inputs.version }}" '.version = $v' \
             custom_components/easy_stock/manifest.json > /tmp/manifest.json
           mv /tmp/manifest.json custom_components/easy_stock/manifest.json
+
+      - name: Build card JS
+        run: npm run build
 
       - name: Commit, tag and push
         run: |
