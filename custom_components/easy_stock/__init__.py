@@ -1,14 +1,11 @@
-import hashlib
-from pathlib import Path
-
-from homeassistant.components.frontend import add_extra_js_url
-from homeassistant.components.http import HomeAssistantView, StaticPathConfig
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, CONF_SYMBOL, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
 from .coordinator import StockDataCoordinator
+from .frontend import async_register_card
 
 PLATFORMS = ["sensor"]
 
@@ -34,18 +31,8 @@ class EasyStockHistoryView(HomeAssistantView):
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Register static path, Lovelace resource, and history REST endpoint once per domain."""
-    await hass.http.async_register_static_paths([
-        StaticPathConfig(
-            f"/{DOMAIN}",
-            str(Path(__file__).parent / "www"),
-            cache_headers=False,
-        )
-    ])
-    js_path = Path(__file__).parent / "www" / "easy-stock-card.js"
-    js_bytes = await hass.async_add_executor_job(js_path.read_bytes)
-    file_hash = hashlib.md5(js_bytes).hexdigest()[:8]
-    add_extra_js_url(hass, f"/{DOMAIN}/easy-stock-card.js?v={file_hash}")
+    """Register the card, the shared data store and the history endpoint."""
+    await async_register_card(hass)
     hass.data.setdefault(DOMAIN, {})
     hass.http.register_view(EasyStockHistoryView())
     return True
