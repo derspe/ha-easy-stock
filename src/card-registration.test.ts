@@ -70,12 +70,18 @@ describe("card registration", () => {
   // first warns twice about the defines it skipped. That is the behaviour under
   // test, but printed raw it buries the actual test output — so console is
   // silenced for all of them and the assertions read the recorded calls.
-  let warned: ReturnType<typeof vi.spyOn>;
-  let informed: ReturnType<typeof vi.spyOn>;
+  let warned: string[];
+  let informed: string[];
 
   beforeEach(() => {
-    warned = vi.spyOn(console, "warn").mockImplementation(() => {});
-    informed = vi.spyOn(console, "info").mockImplementation(() => {});
+    warned = [];
+    informed = [];
+    vi.spyOn(console, "warn").mockImplementation((...args: unknown[]) => {
+      warned.push(args.map(String).join(" "));
+    });
+    vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
+      informed.push(args.map(String).join(" "));
+    });
   });
 
   afterEach(() => {
@@ -106,14 +112,13 @@ describe("card registration", () => {
     await import(/* @vite-ignore */ firstUrl);
     await import(/* @vite-ignore */ duplicateUrl);
 
-    const messages = warned.mock.calls.map((call) => String(call[0]));
-    expect(messages.some((m) => m.includes("<easy-stock-card>"))).toBe(true);
-    expect(messages.some((m) => m.includes("<easy-stock-card-editor>"))).toBe(
+    expect(warned.some((m) => m.includes("<easy-stock-card>"))).toBe(true);
+    expect(warned.some((m) => m.includes("<easy-stock-card-editor>"))).toBe(
       true,
     );
     // The message has to name the copy that was ignored, so the duplicate can
     // be told apart from the one that won.
-    expect(messages.some((m) => m.includes(duplicateUrl))).toBe(true);
+    expect(warned.some((m) => m.includes(duplicateUrl))).toBe(true);
   });
 
   it("announces which build is live", async () => {
@@ -121,9 +126,7 @@ describe("card registration", () => {
     // rather than having been cached by an earlier test.
     await import(/* @vite-ignore */ bannerUrl);
 
-    const line = informed.mock.calls
-      .map((call) => String(call[0]))
-      .find((m) => m.includes("[easy-stock-card]"));
+    const line = informed.find((m) => m.includes("[easy-stock-card]"));
     expect(line).toBeDefined();
     // In production the URL carries the ?v=<md5> cache-buster the integration
     // appends, so this identifies the exact bundle the browser loaded.
