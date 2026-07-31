@@ -54,6 +54,23 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
    ```
 3. Restart Home Assistant
 
+### The card does not appear
+
+The integration registers the card automatically. If it is still missing:
+
+1. Confirm Easy Stock is listed under **Settings → Devices & Services**. Without a configured
+   entry the integration never starts, and the card is not served at all.
+2. Check **Settings → Dashboards → ⋮ → Resources** for an entry pointing at
+   `/easy_stock/easy-stock-card.js`.
+3. If your Lovelace resources are in YAML mode, add it yourself:
+
+   ```yaml
+   lovelace:
+     resources:
+       - url: /easy_stock/easy-stock-card.js
+         type: module
+   ```
+
 ## Setup
 
 ### Add an asset
