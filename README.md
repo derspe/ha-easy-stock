@@ -55,6 +55,19 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
    ```
 3. Restart Home Assistant
 
+### After updating
+
+Restart Home Assistant, then force a fresh frontend load **once**. The update itself can still be
+served out of your browser's or app's cache, which makes it look like nothing changed.
+
+- **Browser:** **Ctrl+Shift+R** (**Cmd+Shift+R** on macOS).
+- **Companion App:** look for **Reset frontend cache** in the app's own settings — on iOS under
+  *Debug*, on Android under *Troubleshooting*. The exact path moves between app versions, so
+  search for that wording rather than following a fixed menu path. On iOS, pulling down on the
+  page is often enough.
+
+You only need to do this once per update, not every time you open a dashboard.
+
 ### The card does not appear
 
 The integration registers the card itself — as a dashboard resource when your Lovelace resources
@@ -66,7 +79,7 @@ If the card is still missing:
 1. Confirm Easy Stock is listed under **Settings → Devices & Services**. Without a configured
    entry the integration never starts, and the card is not served at all.
 2. Open your browser's developer console and reload the dashboard. The card logs one line on
-   load: `[easy-stock-card] v0.4.0 loaded from /easy_stock/easy-stock-card.js?v=…`.
+   load: `[easy-stock-card] v0.4.0 loaded from http://<your-ha>:8123/easy_stock/easy-stock-card.js?v=…`.
    - **No such line** — the browser never loaded the file. Continue with step 3.
    - **Two such lines** — a second, probably stale copy is registered. The card also warns which
      copy was ignored. Remove the duplicate under **Settings → Dashboards → ⋮ → Resources**
@@ -75,8 +88,9 @@ If the card is still missing:
    `/easy_stock/easy-stock-card.js?v=…`. If it is missing, search your Home Assistant log for
    `easy_stock.frontend` — it records on every start whether the card was registered as a
    dashboard resource, or why it fell back to the frontend injection.
-4. Force a reload past the browser and service-worker cache: **Ctrl+Shift+R** (**Cmd+Shift+R** on
-   macOS), or open the dashboard in a private window to rule caching out entirely.
+4. Force a reload past the browser and service-worker cache — see [After updating](#after-updating)
+   for the browser and Companion App variants. Opening the dashboard in a private window rules
+   caching out entirely.
 
 If none of that helps, please [open an issue](https://github.com/derspe/ha-easy-stock/issues) and
 include the console line from step 2 and the `easy_stock.frontend` log lines from step 3.
@@ -185,8 +199,15 @@ entities:
 **The card does not appear / "Custom element doesn't exist: easy-stock-card"**
 - See [The card does not appear](#the-card-does-not-appear) under Installation for the full
   checklist — the quick version is: check the browser console for the card's
-  `[easy-stock-card] v… loaded from …` line, then hard-refresh with **Ctrl+Shift+R**
-  (**Cmd+Shift+R** on macOS) to get past a stale service-worker cache
+  `[easy-stock-card] v… loaded from …` line, then clear the cached frontend as described under
+  [After updating](#after-updating) (**Ctrl+Shift+R** in a browser, **Reset frontend cache** in
+  the Companion App) to get past a stale service-worker cache
+
+**An Easy Stock resource is left over after uninstalling**
+- Removing the integration under **Settings → Devices & Services** also removes its dashboard
+  resource. Uninstalling through HACS without removing the integration first cannot do that, so
+  a resource pointing at `/easy_stock/easy-stock-card.js` stays behind and 404s on every page
+  load. Delete it under **Settings → Dashboards → ⋮ → Resources**
 
 **No data / sensor unavailable**
 - Verify the ticker symbol is correct on [finance.yahoo.com](https://finance.yahoo.com)
