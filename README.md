@@ -63,8 +63,9 @@ served out of your browser's or app's cache, which makes it look like nothing ch
 - **Browser:** **Ctrl+Shift+R** (**Cmd+Shift+R** on macOS).
 - **Companion App:** look for **Reset frontend cache** in the app's own settings — on iOS under
   *Debug*, on Android under *Troubleshooting*. The exact path moves between app versions, so
-  search for that wording rather than following a fixed menu path. On iOS, pulling down on the
-  page is often enough.
+  search for that wording rather than following a fixed menu path. **Then force-quit and reopen
+  the app** — the reset does not necessarily take effect until the app has actually restarted,
+  and skipping this step is what makes an update look like it never arrived.
 
 You only need to do this once per update, not every time you open a dashboard.
 
