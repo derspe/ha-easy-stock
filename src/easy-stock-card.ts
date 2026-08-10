@@ -16,6 +16,7 @@ import {
   entityIdOf,
   entityCurrencyOverride,
 } from "./currency";
+import { hasIntradayData } from "./market";
 
 // ---------------------------------------------------------------------------
 // Currency rate fetching (the rate table + conversion model live in ./currency)
@@ -592,7 +593,7 @@ export class EasyStockCard extends LitElement {
     range: TimeRange,
     livePrice: number,
     previousClose: number,
-    priceIsLive: boolean
+    intradayData: boolean
   ): [string, number][] {
     const today = this._todayStr();
 
@@ -600,8 +601,8 @@ export class EasyStockCard extends LitElement {
       const haData = this._cachedHaHistory(entityId, range as "1T" | "1W");
 
       if (range === "1T") {
-        // Market is closed for this asset (stock on weekend/holiday).
-        if (!priceIsLive) {
+        // The asset did not trade today at all (stock on a weekend/holiday).
+        if (!intradayData) {
           return [["prev", livePrice], [today, livePrice]]; // flat → 0 %
         }
 
@@ -761,12 +762,10 @@ export class EasyStockCard extends LitElement {
     }
     const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
 
-    // price_is_live from coordinator: True when the asset traded today (UTC date match).
-    // We no longer require market_state === "REGULAR" here because crypto (BTC) reports
-    // CLOSED briefly at UTC midnight despite trading 24/7. ETFs on weekends/holidays
-    // are caught correctly because their coordinator sets price_is_live = False.
-    const priceIsLive = attr.price_is_live ?? false;
-    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, priceIsLive);
+    // The 1T chart asks "did this asset trade today", not "is the exchange open
+    // right now" — those diverge for every hour between a close and UTC midnight.
+    const intradayData = hasIntradayData(attr);
+    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, intradayData);
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
     const trendColor = isPositive

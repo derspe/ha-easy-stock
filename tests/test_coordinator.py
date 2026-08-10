@@ -8,7 +8,14 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from custom_components.easy_stock.coordinator import StockDataCoordinator
 from custom_components.easy_stock.const import YAHOO_CHART_URL, YAHOO_CHART_URL_MINI
 
-from .conftest import SYMBOL, SAMPLE_DAYS, make_yahoo_payload, make_store, mock_http
+from .conftest import (
+    SYMBOL,
+    SAMPLE_DAYS,
+    make_trading_period,
+    make_yahoo_payload,
+    make_store,
+    mock_http,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -162,12 +169,12 @@ async def test_price_is_live_when_last_date_is_today(hass):
 
 
 async def test_price_is_live_when_meta_differs_from_last_close(hass):
-    """Old candle date but meta_price differs by >0.01% → live pre/after-market price."""
+    """No trading windows → fall back to the heuristic: meta_price moved → live."""
     coord = _coord(hass)
     last_close = SAMPLE_DAYS[-1][1]
     meta = round(last_close * 1.005, 4)  # 0.5% above close
 
-    patcher, _ = mock_http(make_yahoo_payload(meta_price=meta))
+    patcher, _ = mock_http(make_yahoo_payload(meta_price=meta, trading_period=None))
 
     with patcher:
         result = await coord._async_update_data()
@@ -177,17 +184,86 @@ async def test_price_is_live_when_meta_differs_from_last_close(hass):
 
 
 async def test_price_is_stale_when_meta_matches_last_close(hass):
-    """Old candle date and meta_price == last close → stale, price_is_live=False."""
+    """No trading windows, old candle and meta_price == last close → stale."""
     coord = _coord(hass)
     last_close = SAMPLE_DAYS[-1][1]
 
-    patcher, _ = mock_http(make_yahoo_payload(meta_price=last_close))
+    patcher, _ = mock_http(make_yahoo_payload(meta_price=last_close, trading_period=None))
 
     with patcher:
         result = await coord._async_update_data()
 
     assert result["current_price"] == last_close
     assert result["price_is_live"] is False
+
+
+# ---------------------------------------------------------------------------
+# Market state (issue #13 — Yahoo dropped meta.marketState)
+# ---------------------------------------------------------------------------
+
+
+async def test_market_state_derived_when_yahoo_omits_it(hass):
+    """Open regular window and no marketState field → REGULAR, not the CLOSED default."""
+    coord = _coord(hass)
+    patcher, _ = mock_http(make_yahoo_payload())
+
+    with patcher:
+        result = await coord._async_update_data()
+
+    assert result["market_state"] == "REGULAR"
+
+
+async def test_market_state_closed_after_the_session_ended(hass):
+    """Session over but still the same UTC day (Tokyo case) → CLOSED, price not live."""
+    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    days = SAMPLE_DAYS[:-1] + [(today_str, 195.00)]
+    coord = _coord(hass)
+    patcher, _ = mock_http(
+        make_yahoo_payload(days_prices=days, trading_period=make_trading_period(open_now=False))
+    )
+
+    with patcher:
+        result = await coord._async_update_data()
+
+    assert result["market_state"] == "CLOSED"
+    assert result["price_is_live"] is False
+
+
+async def test_traded_today_stays_true_after_the_session_ended(hass):
+    """The card needs "did it trade today" — that stays true once the market shuts."""
+    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    days = SAMPLE_DAYS[:-1] + [(today_str, 195.00)]
+    coord = _coord(hass)
+    patcher, _ = mock_http(
+        make_yahoo_payload(days_prices=days, trading_period=make_trading_period(open_now=False))
+    )
+
+    with patcher:
+        result = await coord._async_update_data()
+
+    assert result["traded_today"] is True
+
+
+async def test_traded_today_false_when_the_last_candle_is_old(hass):
+    coord = _coord(hass)
+    last_close = SAMPLE_DAYS[-1][1]
+    patcher, _ = mock_http(make_yahoo_payload(meta_price=last_close, trading_period=None))
+
+    with patcher:
+        result = await coord._async_update_data()
+
+    assert result["traded_today"] is False
+
+
+async def test_market_state_falls_back_to_closed_without_trading_windows(hass):
+    """Undeterminable session → keep the documented CLOSED default for the attribute."""
+    coord = _coord(hass)
+    patcher, _ = mock_http(make_yahoo_payload(trading_period=None))
+
+    with patcher:
+        result = await coord._async_update_data()
+
+    assert result["market_state"] == "CLOSED"
 
 
 async def test_change_and_change_pct_calculation(hass):

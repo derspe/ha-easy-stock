@@ -974,6 +974,9 @@ function entityIdOf(entry) {
 function entityCurrencyOverride(entry) {
   return typeof entry === "string" ? void 0 : entry.display_currency;
 }
+function hasIntradayData(attr) {
+  return attr.traded_today ?? attr.price_is_live ?? false;
+}
 var __defProp = Object.defineProperty;
 var __decorateClass = (decorators, target, key, kind) => {
   var result = void 0;
@@ -1481,12 +1484,12 @@ const _EasyStockCard = class _EasyStockCard extends i {
    * 1T / 1W: HA recorder history (5-min resolution), fallback to sensor attributes.
    * 1M / YTD / 1J: Yahoo daily history from sensor attribute.
    */
-  _buildChartData(entityId, yahooHistory, range, livePrice, previousClose, priceIsLive) {
+  _buildChartData(entityId, yahooHistory, range, livePrice, previousClose, intradayData) {
     const today = this._todayStr();
     if (HA_HISTORY_RANGES.includes(range)) {
       const haData = this._cachedHaHistory(entityId, range);
       if (range === "1T") {
-        if (!priceIsLive) {
+        if (!intradayData) {
           return [["prev", livePrice], [today, livePrice]];
         }
         const lastYahooEntry = yahooHistory.length > 0 ? yahooHistory[yahooHistory.length - 1] : null;
@@ -1610,8 +1613,8 @@ const _EasyStockCard = class _EasyStockCard extends i {
       void this._fetchHaHistory(entityId, this._timeRange);
     }
     const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
-    const priceIsLive = attr.price_is_live ?? false;
-    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, priceIsLive);
+    const intradayData = hasIntradayData(attr);
+    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, intradayData);
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
     const trendColor = isPositive ? "var(--success-color, #4caf50)" : "var(--error-color, #f44336)";

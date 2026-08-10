@@ -48,4 +48,5 @@ class StockSensor(CoordinatorEntity, SensorEntity):
             "change_pct": d["change_pct"],
             "previous_close": d["previous_close"],
             "price_is_live": d["price_is_live"],
+            "traded_today": d["traded_today"],
         }
