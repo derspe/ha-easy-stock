@@ -6,6 +6,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import YAHOO_CHART_URL, YAHOO_CHART_URL_MINI
+from .market_state import derive_market_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,17 +93,29 @@ class StockDataCoordinator(DataUpdateCoordinator):
                 self._history = fetched[-365:]
                 await self._store.async_save(self._history)
             elif fetched:
-                last_fetched_date = fetched[-1][0]
-                last_stored_date = self._history[-1][0]
+                last_fetched_date, last_fetched_price = fetched[-1]
+                last_stored_date, last_stored_price = self._history[-1]
                 if last_fetched_date > last_stored_date:
-                    self._history.append([last_fetched_date, fetched[-1][1]])
+                    self._history.append([last_fetched_date, last_fetched_price])
+                    await self._store.async_save(self._history)
+                elif (
+                    last_fetched_date == last_stored_date
+                    and last_fetched_price != last_stored_price
+                ):
+                    # Yahoo keeps rewriting the running day's candle until the
+                    # close. Appending only on a new date froze the entry at the
+                    # first intraday sample of that day, so the stored series was
+                    # a set of arbitrary intraday prices rather than closes.
+                    self._history[-1] = [last_fetched_date, last_fetched_price]
                     await self._store.async_save(self._history)
 
             # Price logic — same as before, based on fetched (recent) data
             today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
             meta_price = meta.get("regularMarketPrice") or 0
 
-            price_is_live = False
+            # traded_today: the asset produced a price today, so an intraday view
+            # has something to show. Stays true once the exchange has shut.
+            traded_today = False
             if len(fetched) >= 2:
                 last_date, last_price = fetched[-1]
                 prev_price = fetched[-2][1]
@@ -110,20 +123,29 @@ class StockDataCoordinator(DataUpdateCoordinator):
                 if last_date == today_str:
                     current_price = meta_price or last_price
                     previous_close = prev_price
-                    price_is_live = True
+                    traded_today = True
                 else:
                     if meta_price and abs(meta_price - last_price) / last_price > 0.0001:
                         current_price = meta_price
                         previous_close = last_price
-                        price_is_live = True
+                        traded_today = True
                     else:
                         current_price = last_price
                         previous_close = prev_price
-                        price_is_live = False
+                        traded_today = False
             else:
                 current_price = meta_price or (fetched[-1][1] if fetched else 0)
                 previous_close = meta.get("previousClose") or meta.get("chartPreviousClose") or 0
-                price_is_live = bool(meta_price)
+                traded_today = bool(meta_price)
+
+            # price_is_live: the exchange is in session right now, so the price
+            # still moves. Derived from currentTradingPeriod because a candle
+            # dated today keeps its date for hours after the close — which used
+            # to report Tokyo as live all through the European afternoon. Only
+            # when Yahoo ships no trading windows at all does the date-based
+            # heuristic stand in for it.
+            state = derive_market_state(meta)
+            price_is_live = traded_today if state is None else state == "REGULAR"
 
             change = current_price - previous_close
             change_pct = (change / previous_close * 100) if previous_close else 0
@@ -132,12 +154,13 @@ class StockDataCoordinator(DataUpdateCoordinator):
                 "symbol": self.symbol,
                 "long_name": meta.get("longName") or meta.get("shortName") or self.symbol,
                 "currency": meta.get("currency", ""),
-                "market_state": meta.get("marketState", "CLOSED"),
+                "market_state": state or "CLOSED",
                 "current_price": round(current_price, 4),
                 "previous_close": round(previous_close, 4),
                 "change": round(change, 4),
                 "change_pct": round(change_pct, 2),
                 "price_is_live": price_is_live,
+                "traded_today": traded_today,
                 # NOTE: "history" intentionally omitted — served via /api/easy_stock/history
             }
         except (KeyError, IndexError, TypeError) as err:

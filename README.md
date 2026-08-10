@@ -151,7 +151,8 @@ Each sensor additionally exposes the following state attributes:
 | `change` | float | Absolute price change from previous close |
 | `change_pct` | float | Percentage change from previous close |
 | `previous_close` | float | Previous closing price |
-| `price_is_live` | bool | `true` when market is open or asset trades 24/7 |
+| `price_is_live` | bool | `true` while the exchange is in session (or the asset trades 24/7) |
+| `traded_today` | bool | `true` once the asset produced a price today — stays `true` after the close |
 
 ## Lovelace Card
 

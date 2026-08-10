@@ -25,10 +25,32 @@ SAMPLE_DAYS = [
 ]
 
 
-def make_yahoo_payload(days_prices=None, meta_price=None, market_state="REGULAR"):
-    """Build a minimal Yahoo Finance chart API response."""
+_DEFAULT_PERIOD = object()
+
+
+def make_trading_period(open_now=True, now=None):
+    """Build a currentTradingPeriod whose regular window is open or closed now."""
+    if now is None:
+        now = int(datetime.now(timezone.utc).timestamp())
+    start, end = (now - 3600, now + 3600) if open_now else (now - 7200, now - 3600)
+    return {
+        "pre": {"start": start - 3600, "end": start},
+        "regular": {"start": start, "end": end},
+        "post": {"start": end, "end": end + 3600},
+    }
+
+
+def make_yahoo_payload(days_prices=None, meta_price=None, trading_period=_DEFAULT_PERIOD):
+    """Build a minimal Yahoo Finance chart API response.
+
+    Mirrors the live v8 chart API: it carries currentTradingPeriod and no
+    marketState — Yahoo dropped that field (issue #13). Pass trading_period=None
+    to model a response without any trading windows at all.
+    """
     if days_prices is None:
         days_prices = SAMPLE_DAYS
+    if trading_period is _DEFAULT_PERIOD:
+        trading_period = make_trading_period(open_now=True)
     timestamps = []
     closes = []
     for date_str, price in days_prices:
@@ -37,21 +59,21 @@ def make_yahoo_payload(days_prices=None, meta_price=None, market_state="REGULAR"
         closes.append(price)
     last_close = closes[-1]
     prev_close = closes[-2] if len(closes) >= 2 else last_close
+    meta = {
+        "symbol": SYMBOL,
+        "currency": "USD",
+        "longName": "Apple Inc.",
+        "regularMarketPrice": meta_price if meta_price is not None else last_close,
+        "previousClose": prev_close,
+        "chartPreviousClose": prev_close,
+    }
+    if trading_period is not None:
+        meta["currentTradingPeriod"] = trading_period
     return {
         "chart": {
             "result": [
                 {
-                    "meta": {
-                        "symbol": SYMBOL,
-                        "currency": "USD",
-                        "longName": "Apple Inc.",
-                        "marketState": market_state,
-                        "regularMarketPrice": (
-                            meta_price if meta_price is not None else last_close
-                        ),
-                        "previousClose": prev_close,
-                        "chartPreviousClose": prev_close,
-                    },
+                    "meta": meta,
                     "timestamp": timestamps,
                     "indicators": {"quote": [{"close": closes}]},
                 }
