@@ -131,6 +131,29 @@ async def test_new_day_appended_to_history(hass):
     store.async_save.assert_called_once()
 
 
+async def test_todays_history_entry_is_refreshed_while_the_session_runs(hass):
+    """Yahoo rewrites today's candle as the session runs — the stored point must follow.
+
+    Appending only on a new date froze today's entry at the first intraday sample
+    seen, so every stored "daily close" was whatever the price happened to be at
+    the first poll of that day.
+    """
+    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    history = [[d, p] for d, p in SAMPLE_DAYS] + [[today_str, 190.00]]
+    store = make_store(history=history)
+    coord = StockDataCoordinator(hass, SYMBOL, 900, store)
+
+    payload = make_yahoo_payload(days_prices=SAMPLE_DAYS[-1:] + [(today_str, 195.00)])
+    patcher, _ = mock_http(payload)
+
+    with patcher:
+        await coord._async_update_data()
+
+    assert coord._history[-1] == [today_str, 195.00]
+    assert len(coord._history) == len(SAMPLE_DAYS) + 1  # refreshed, not appended
+    store.async_save.assert_called_once()
+
+
 async def test_no_duplicate_appended_when_date_unchanged(hass):
     """Mini fetch with no new date leaves history unchanged."""
     history = [[d, p] for d, p in SAMPLE_DAYS]

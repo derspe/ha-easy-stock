@@ -93,10 +93,20 @@ class StockDataCoordinator(DataUpdateCoordinator):
                 self._history = fetched[-365:]
                 await self._store.async_save(self._history)
             elif fetched:
-                last_fetched_date = fetched[-1][0]
-                last_stored_date = self._history[-1][0]
+                last_fetched_date, last_fetched_price = fetched[-1]
+                last_stored_date, last_stored_price = self._history[-1]
                 if last_fetched_date > last_stored_date:
-                    self._history.append([last_fetched_date, fetched[-1][1]])
+                    self._history.append([last_fetched_date, last_fetched_price])
+                    await self._store.async_save(self._history)
+                elif (
+                    last_fetched_date == last_stored_date
+                    and last_fetched_price != last_stored_price
+                ):
+                    # Yahoo keeps rewriting the running day's candle until the
+                    # close. Appending only on a new date froze the entry at the
+                    # first intraday sample of that day, so the stored series was
+                    # a set of arbitrary intraday prices rather than closes.
+                    self._history[-1] = [last_fetched_date, last_fetched_price]
                     await self._store.async_save(self._history)
 
             # Price logic — same as before, based on fetched (recent) data
