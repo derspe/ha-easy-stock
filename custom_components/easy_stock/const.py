@@ -3,6 +3,8 @@ DOMAIN = "easy_stock"
 CONF_SYMBOL = "symbol"
 CONF_NAME = "name"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_PURCHASE_PRICE = "purchase_price"
+CONF_QUANTITY = "quantity"
 
 DEFAULT_SCAN_INTERVAL = 900  # 15 minutes
 

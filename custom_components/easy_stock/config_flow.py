@@ -2,7 +2,23 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_SYMBOL, CONF_NAME, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+from .const import (
+    DOMAIN,
+    CONF_SYMBOL,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    CONF_PURCHASE_PRICE,
+    CONF_QUANTITY,
+    DEFAULT_SCAN_INTERVAL,
+)
+
+# 0 is the "not set" value for both position fields. voluptuous has no way to
+# leave an optional number blank in the UI form, so the flow needs a value that
+# means "no position configured"; a purchase price of zero cannot occur for a
+# real holding, which makes it a safe sentinel.
+POSITION_UNSET = 0.0
+
+_POSITION_NUMBER = vol.All(vol.Coerce(float), vol.Range(min=0))
 
 
 class EasyStockConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -27,6 +43,8 @@ class EasyStockConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_SYMBOL: symbol,
                     CONF_NAME: user_input.get(CONF_NAME, ""),
                     CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                    CONF_PURCHASE_PRICE: user_input.get(CONF_PURCHASE_PRICE, POSITION_UNSET),
+                    CONF_QUANTITY: user_input.get(CONF_QUANTITY, POSITION_UNSET),
                 },
             )
 
@@ -37,6 +55,8 @@ class EasyStockConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
                     int, vol.Range(min=60, max=86400)
                 ),
+                vol.Optional(CONF_PURCHASE_PRICE, default=POSITION_UNSET): _POSITION_NUMBER,
+                vol.Optional(CONF_QUANTITY, default=POSITION_UNSET): _POSITION_NUMBER,
             }
         )
 
@@ -58,6 +78,13 @@ class EasyStockOptionsFlow(config_entries.OptionsFlow):
         current_interval = self._config_entry.options.get(
             CONF_SCAN_INTERVAL, self._config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         )
+        current_purchase_price = self._config_entry.options.get(
+            CONF_PURCHASE_PRICE,
+            self._config_entry.data.get(CONF_PURCHASE_PRICE, POSITION_UNSET),
+        )
+        current_quantity = self._config_entry.options.get(
+            CONF_QUANTITY, self._config_entry.data.get(CONF_QUANTITY, POSITION_UNSET)
+        )
 
         schema = vol.Schema(
             {
@@ -65,6 +92,10 @@ class EasyStockOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(CONF_SCAN_INTERVAL, default=current_interval): vol.All(
                     int, vol.Range(min=60, max=86400)
                 ),
+                vol.Optional(
+                    CONF_PURCHASE_PRICE, default=current_purchase_price
+                ): _POSITION_NUMBER,
+                vol.Optional(CONF_QUANTITY, default=current_quantity): _POSITION_NUMBER,
             }
         )
 

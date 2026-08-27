@@ -12,6 +12,7 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 
 - **Any asset on Yahoo Finance** — stocks, ETFs, index funds, cryptocurrencies, commodities
 - **Sensor entity per asset** — current price, daily change, market state and more as attributes
+- **Optional position tracking** — enter your purchase price and quantity once and the sensor also reports what the holding is worth and how far it is up or down
 - **History recording** — works with the HA recorder out of the box (`SensorStateClass.MEASUREMENT`)
 - **Built-in Lovelace card** — auto-registered, no manual resource setup required
   - Sparkline charts for 5 time ranges: **1D · 1W · 1M · YTD · 1Y**
@@ -115,6 +116,8 @@ include the console line from step 2 and the `easy_stock.frontend` log lines fro
 | **Symbol** | Yahoo Finance ticker (see examples below) |
 | **Name** | Display name shown in the card (optional — falls back to the symbol if left empty) |
 | **Update interval** | How often to poll Yahoo Finance in seconds (60–86400, default 900) |
+| **Purchase price per unit** | Optional — what you paid per share/unit, in the asset's trading currency. `0` means "track the price only" |
+| **Quantity held** | Optional — how many shares/units you hold. `0` means "per-unit figures only" |
 
 Repeat for each asset you want to track. Each asset becomes its own sensor entity.
 
@@ -154,6 +157,46 @@ Each sensor additionally exposes the following state attributes:
 | `previous_close` | float | Previous closing price |
 | `price_is_live` | bool | `true` while the exchange is in session (or the asset trades 24/7) |
 | `traded_today` | bool | `true` once the asset produced a price today — stays `true` after the close |
+
+### Position attributes (optional)
+
+If you enter a **purchase price** for an asset — when adding it, or later via
+**Settings → Devices & Services → Easy Stock → Configure** — the sensor gains a
+second set of attributes. Both fields are static: they are stored with the
+config entry and never touched by the Yahoo poll.
+
+| Attribute | Type | Description | Requires |
+|---|---|---|---|
+| `purchase_price` | float | What you paid per share/unit | purchase price |
+| `gain_per_unit` | float | Current price − purchase price | purchase price |
+| `gain_pct` | float | Gain/loss since purchase, in percent | purchase price |
+| `quantity` | float | Shares/units held | quantity |
+| `invested` | float | `purchase_price × quantity` | quantity |
+| `position_value` | float | `current price × quantity` | quantity |
+| `gain_total` | float | `position_value − invested` | quantity |
+
+Leave the purchase price at `0` and none of these attributes appear — the
+sensor looks exactly as it did before. Note that `change` / `change_pct` stay
+the **daily** move; the gain since purchase is `gain_*`.
+
+A total across all your positions is a template sensor away:
+
+```yaml
+template:
+  - sensor:
+      - name: "Portfolio value"
+        unit_of_measurement: "EUR"
+        state_class: measurement
+        state: >
+          {{ expand(states.sensor)
+             | selectattr('attributes.position_value', 'defined')
+             | map(attribute='attributes.position_value')
+             | sum | round(2) }}
+```
+
+> **Note:** `position_value` is in each asset's own trading currency. Mixing
+> currencies in one sum only works if your assets share one — otherwise convert
+> per asset, or let the card do the conversion for display.
 
 ## Lovelace Card
 

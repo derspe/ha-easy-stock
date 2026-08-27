@@ -7,12 +7,35 @@
         "data": {
           "symbol": "Symbol",
           "name": "Display name (optional)",
-          "scan_interval": "Update interval (seconds)"
+          "scan_interval": "Update interval (seconds)",
+          "purchase_price": "Purchase price per unit (optional)",
+          "quantity": "Quantity held (optional)"
+        },
+        "data_description": {
+          "purchase_price": "What you paid per share/unit, in the asset's trading currency. Leave at 0 to track the price only.",
+          "quantity": "Number of shares or units you hold. Leave at 0 to get per-unit figures only."
         }
       }
     },
     "abort": {
       "already_configured": "This symbol is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Easy Stock options",
+        "data": {
+          "name": "Display name",
+          "scan_interval": "Update interval (seconds)",
+          "purchase_price": "Purchase price per unit",
+          "quantity": "Quantity held"
+        },
+        "data_description": {
+          "purchase_price": "What you paid per share/unit, in the asset's trading currency. Set to 0 to track the price only.",
+          "quantity": "Number of shares or units you hold. Set to 0 to get per-unit figures only."
+        }
+      }
     }
   }
 }

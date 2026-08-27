@@ -4,8 +4,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, CONF_SYMBOL, CONF_NAME
+from .const import DOMAIN, CONF_SYMBOL, CONF_NAME, CONF_PURCHASE_PRICE, CONF_QUANTITY
 from .coordinator import StockDataCoordinator
+from .portfolio import position_attributes
 
 
 async def async_setup_entry(
@@ -25,6 +26,15 @@ class StockSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"easy_stock_{entry.data[CONF_SYMBOL]}"
         name = entry.options.get(CONF_NAME) or entry.data.get(CONF_NAME) or entry.title or entry.data[CONF_SYMBOL]
         self._attr_name = name.strip()
+
+    def _option(self, key, default=None):
+        """Read a setting, letting the options flow override the initial value.
+
+        Options only hold what the user has saved through the options dialog,
+        so an entry that was created before a setting existed has it in
+        ``data`` alone -- or nowhere at all.
+        """
+        return self._entry.options.get(key, self._entry.data.get(key, default))
 
     @property
     def native_value(self) -> float | None:
@@ -49,4 +59,11 @@ class StockSensor(CoordinatorEntity, SensorEntity):
             "previous_close": d["previous_close"],
             "price_is_live": d["price_is_live"],
             "traded_today": d["traded_today"],
+            # Static, user-entered figures. Empty unless a purchase price is
+            # configured, so sensors without a position stay untouched.
+            **position_attributes(
+                d["current_price"],
+                self._option(CONF_PURCHASE_PRICE),
+                self._option(CONF_QUANTITY),
+            ),
         }

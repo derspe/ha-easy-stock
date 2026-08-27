@@ -10,6 +10,8 @@ from custom_components.easy_stock.const import (
     CONF_SYMBOL,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    CONF_PURCHASE_PRICE,
+    CONF_QUANTITY,
     DEFAULT_SCAN_INTERVAL,
 )
 
@@ -123,3 +125,69 @@ async def test_options_flow_saves_new_values(hass):
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_NAME] == "MSFT Stock"
     assert entry.options[CONF_SCAN_INTERVAL] == 1800
+
+
+# ---------------------------------------------------------------------------
+# Purchase price / quantity
+# ---------------------------------------------------------------------------
+
+
+async def test_config_flow_stores_position_fields(hass):
+    """Purchase price and quantity are optional but persisted when given."""
+    result = await _init_flow(hass)
+
+    with _SETUP_PATCHES[0], _SETUP_PATCHES[1]:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SYMBOL: "NVDA",
+                CONF_NAME: "Nvidia",
+                CONF_SCAN_INTERVAL: 900,
+                CONF_PURCHASE_PRICE: 150.5,
+                CONF_QUANTITY: 12,
+            },
+        )
+
+    assert result["data"][CONF_PURCHASE_PRICE] == 150.5
+    assert result["data"][CONF_QUANTITY] == 12
+
+
+async def test_position_fields_default_to_unset(hass):
+    """Leaving the fields alone must not configure a position."""
+    result = await _init_flow(hass)
+
+    with _SETUP_PATCHES[0], _SETUP_PATCHES[1]:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SYMBOL: "INTC", CONF_NAME: "", CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+        )
+
+    assert result["data"][CONF_PURCHASE_PRICE] == 0
+    assert result["data"][CONF_QUANTITY] == 0
+
+
+async def test_options_flow_saves_position_fields(hass):
+    """An existing entry can get its purchase price without being re-added."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SYMBOL: "MSFT", CONF_NAME: "Microsoft", CONF_SCAN_INTERVAL: 900},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Microsoft",
+            CONF_SCAN_INTERVAL: 900,
+            CONF_PURCHASE_PRICE: 310.25,
+            CONF_QUANTITY: 5,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_PURCHASE_PRICE] == 310.25
+    assert entry.options[CONF_QUANTITY] == 5

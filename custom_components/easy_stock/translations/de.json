@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Aktie hinzufügen",
+        "description": "Yahoo-Finance-Symbol eingeben (z. B. SAP.DE, AAPL, BTC-USD)",
+        "data": {
+          "symbol": "Symbol",
+          "name": "Anzeigename (optional)",
+          "scan_interval": "Aktualisierungsintervall (Sekunden)",
+          "purchase_price": "Kaufpreis pro Stück (optional)",
+          "quantity": "Stückzahl im Bestand (optional)"
+        },
+        "data_description": {
+          "purchase_price": "Was du pro Stück bezahlt hast, in der Handelswährung des Werts. 0 lassen, wenn nur der Kurs interessiert.",
+          "quantity": "Anzahl der Stücke in deinem Bestand. 0 lassen, wenn nur die Werte pro Stück interessieren."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Dieses Symbol ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Easy-Stock-Optionen",
+        "data": {
+          "name": "Anzeigename",
+          "scan_interval": "Aktualisierungsintervall (Sekunden)",
+          "purchase_price": "Kaufpreis pro Stück",
+          "quantity": "Stückzahl im Bestand"
+        },
+        "data_description": {
+          "purchase_price": "Was du pro Stück bezahlt hast, in der Handelswährung des Werts. 0 = nur Kurs verfolgen.",
+          "quantity": "Anzahl der Stücke in deinem Bestand. 0 = nur Werte pro Stück."
+        }
+      }
+    }
+  }
+}
