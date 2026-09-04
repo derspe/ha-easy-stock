@@ -349,3 +349,60 @@ async def test_missing_timestamps_raises_update_failed(hass):
 
     with patcher, pytest.raises(UpdateFailed):
         await coord._async_update_data()
+
+
+# ---------------------------------------------------------------------------
+# Price precision (issue #17)
+# ---------------------------------------------------------------------------
+
+
+async def test_a_sub_cent_price_is_not_rounded_to_zero(hass):
+    """round(4.35e-06, 4) reported SHIB-EUR as a price of 0.00."""
+    days = [("2024-01-02", 4.11e-06), ("2024-01-03", 4.35e-06)]
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(make_yahoo_payload(days_prices=days, meta_price=4.35e-06))
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["current_price"] == pytest.approx(4.35e-06)
+    assert data["previous_close"] == pytest.approx(4.11e-06)
+
+
+async def test_the_stored_daily_history_keeps_sub_cent_prices(hass):
+    """The 1M/YTD/1J charts read this store, so it must survive the same rounding."""
+    days = [("2024-01-02", 4.11e-06), ("2024-01-03", 4.35e-06)]
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(make_yahoo_payload(days_prices=days))
+
+    with patcher:
+        await coord._async_update_data()
+
+    assert [p for _, p in coord._history] == pytest.approx([4.11e-06, 4.35e-06])
+
+
+async def test_a_seven_cent_quote_keeps_more_than_four_decimals(hass):
+    """0.0001 on a 0.07 quote is a 0.14 % step — wider than a quiet day."""
+    days = [("2024-01-02", 0.070113), ("2024-01-03", 0.071372)]
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(make_yahoo_payload(days_prices=days, meta_price=0.071372))
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["current_price"] == pytest.approx(0.071372)
+
+
+async def test_an_ordinary_quote_is_unaffected(hass):
+    """The change must not regress for the prices the card already handled."""
+    days = [("2024-01-02", 445.2), ("2024-01-03", 450.6)]
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(make_yahoo_payload(days_prices=days, meta_price=450.6))
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["current_price"] == pytest.approx(450.6)
+    assert data["previous_close"] == pytest.approx(445.2)
+    assert data["change"] == pytest.approx(5.4)
+

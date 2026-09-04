@@ -7,6 +7,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import YAHOO_CHART_URL, YAHOO_CHART_URL_MINI
 from .market_state import derive_market_state
+from .precision import price_decimals, round_price
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +85,7 @@ class StockDataCoordinator(DataUpdateCoordinator):
             for ts, c in zip(timestamps, closes):
                 if ts is not None and c is not None:
                     date_str = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
-                    fetched.append([date_str, round(c, 4)])
+                    fetched.append([date_str, round_price(c)])
 
             # Update persistent history
             if history_needs_backfill:
@@ -150,14 +151,18 @@ class StockDataCoordinator(DataUpdateCoordinator):
             change = current_price - previous_close
             change_pct = (change / previous_close * 100) if previous_close else 0
 
+            # One decimal place for all three, taken from the price they describe,
+            # so the change stays exactly current_price - previous_close.
+            decimals = price_decimals(current_price)
+
             return {
                 "symbol": self.symbol,
                 "long_name": meta.get("longName") or meta.get("shortName") or self.symbol,
                 "currency": meta.get("currency", ""),
                 "market_state": state or "CLOSED",
-                "current_price": round(current_price, 4),
-                "previous_close": round(previous_close, 4),
-                "change": round(change, 4),
+                "current_price": round(current_price, decimals),
+                "previous_close": round(previous_close, decimals),
+                "change": round(change, decimals),
                 "change_pct": round(change_pct, 2),
                 "price_is_live": price_is_live,
                 "traded_today": traded_today,
