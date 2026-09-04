@@ -217,7 +217,8 @@ entities:
 - Check Home Assistant logs for detailed error messages
 
 **1D/1W chart is flat or empty**
-- The HA recorder may not have built up enough history yet — check back after a few polling cycles
+- A flat 1D line is *correct* when the asset has not traded today — a weekend, a public holiday, or simply an exchange that has not opened yet. The card deliberately ignores recorder rows in that case, because a stored row is not a trade: without that, every restart and every post-close revision from Yahoo would be drawn as price movement. The line runs from midnight to the current time and the tile reads 0.00 %.
+- Otherwise the HA recorder may not have built up enough history yet — check back after a few polling cycles
 - Ensure the `recorder` integration is enabled in your `configuration.yaml`
 
 **Currency conversion not working**
@@ -226,6 +227,9 @@ entities:
 
 **LSE share price looks 100× too high**
 - This used to happen because the London Stock Exchange quotes most equities in pence (`GBp` / `GBX`). Easy Stock now normalizes pence to pounds automatically before conversion, so values should match the price you see on the exchange. If you still see a wrong value, please [open an issue](https://github.com/derspe/ha-easy-stock/issues) with the affected ticker.
+
+**A very cheap asset shows a price of 0.00 and 0 % change**
+- This used to happen because prices were rounded to four decimal places, which erased anything below roughly 0.00005 — a coin quoted at 4.35e-06 became `0.0`, and since the previous close rounded to zero as well the percentage could not be calculated either. Easy Stock now rounds to significant figures, so the precision follows the size of the quote.
 
 **Wrong display name**
 - Set a custom **Name** in the integration configuration (Settings → Devices & Services → Easy Stock → Configure)
