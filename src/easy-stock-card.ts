@@ -15,8 +15,11 @@ import {
   resolveTargetCurrency,
   entityIdOf,
   entityCurrencyOverride,
+  priceFractionDigits,
 } from "./currency";
 import { hasIntradayData } from "./market";
+import { sparklinePoints, SPARKLINE_HEIGHT, SPARKLINE_WIDTH } from "./sparkline";
+import { buildChartData, HA_HISTORY_RANGES } from "./chart-data";
 
 // ---------------------------------------------------------------------------
 // Currency rate fetching (the rate table + conversion model live in ./currency)
@@ -439,7 +442,6 @@ interface HaHistoryCacheEntry {
 }
 
 const HA_HISTORY_TTL = 5 * 60 * 1000; // 5 min — matches sensor update interval
-const HA_HISTORY_RANGES: TimeRange[] = ["1T", "1W"];
 
 export class EasyStockCard extends LitElement {
   private _hass?: HomeAssistant;
@@ -576,99 +578,6 @@ export class EasyStockCard extends LitElement {
   // Chart data helpers
   // -------------------------------------------------------------------------
 
-  /** Today as "YYYY-MM-DD" in local time */
-  private _todayStr(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  }
-
-  /**
-   * Build chart data for the selected range.
-   * 1T / 1W: HA recorder history (5-min resolution), fallback to sensor attributes.
-   * 1M / YTD / 1J: Yahoo daily history from sensor attribute.
-   */
-  private _buildChartData(
-    entityId: string,
-    yahooHistory: [string, number][],
-    range: TimeRange,
-    livePrice: number,
-    previousClose: number,
-    intradayData: boolean
-  ): [string, number][] {
-    const today = this._todayStr();
-
-    if (HA_HISTORY_RANGES.includes(range)) {
-      const haData = this._cachedHaHistory(entityId, range as "1T" | "1W");
-
-      if (range === "1T") {
-        // The asset did not trade today at all (stock on a weekend/holiday).
-        if (!intradayData) {
-          return [["prev", livePrice], [today, livePrice]]; // flat → 0 %
-        }
-
-        // Use the last Yahoo history entry as the 1T baseline when it's from a previous day.
-        // This avoids UTC/local midnight boundary issues with attr.previous_close (coordinator
-        // derives previous_close from UTC dates, which can be off by one day at local midnight).
-        const lastYahooEntry = yahooHistory.length > 0 ? yahooHistory[yahooHistory.length - 1] : null;
-        const prev = (lastYahooEntry && lastYahooEntry[0] < today)
-          ? lastYahooEntry[1]
-          : (previousClose > 0 ? previousClose : livePrice);
-
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const midnightISO = todayStart.toISOString();
-
-        // HA recorder: filter to today only, then anchor at midnight with prev close.
-        // Filtering avoids Friday's data bleeding into Saturday's view.
-        // Insert prev close again at the first real data timestamp so the chart shows
-        // a flat horizontal line from midnight to market open (no misleading diagonal).
-        if (haData && haData.length >= 1) {
-          const todayData = haData.filter(([t]) => new Date(t) >= todayStart);
-          if (todayData.length >= 1) {
-            return [[midnightISO, prev], [todayData[0][0], prev], ...todayData];
-          }
-        }
-
-        // Fallback: prev close at midnight → current price now.
-        return [[midnightISO, prev], [new Date().toISOString(), livePrice]];
-      }
-
-      // 1W: HA recorder data regardless of market state
-      if (haData && haData.length >= 2) return haData;
-      // 1W fallback: last 4 Yahoo daily closes + live price
-      const base = yahooHistory.slice(-4);
-      return base.length > 0 ? [...base, [today, livePrice]] : [["prev", previousClose], [today, livePrice]];
-    }
-
-    // 1M / YTD / 1J — Yahoo daily history
-    let base: [string, number][];
-    if (range === "1M") {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 30);
-      const cutoffStr = cutoff.toISOString().slice(0, 10);
-      const filtered = yahooHistory.filter(([d]) => d >= cutoffStr);
-      base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
-    } else if (range === "YTD") {
-      const jan1 = `${new Date().getFullYear()}-01-01`;
-      const filtered = yahooHistory.filter(([d]) => d >= jan1);
-      // Prepend last close of the previous year as YTD baseline (same logic as Yahoo Finance).
-      const prevYearEntries = yahooHistory.filter(([d]) => d < jan1);
-      const prevYearClose = prevYearEntries[prevYearEntries.length - 1];
-      if (prevYearClose) {
-        base = [prevYearClose, ...filtered];
-      } else {
-        base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
-      }
-    } else {
-      base = yahooHistory; // 1J
-    }
-
-    if (base.length === 0) return [[today, livePrice]];
-    const last = base[base.length - 1];
-    if (last[0] === today) return [...base.slice(0, -1), [today, livePrice]];
-    return [...base, [today, livePrice]];
-  }
-
   private _calcPeriodChange(
     chartData: [string, number][],
     range: TimeRange,
@@ -765,7 +674,16 @@ export class EasyStockCard extends LitElement {
     // The 1T chart asks "did this asset trade today", not "is the exchange open
     // right now" — those diverge for every hour between a close and UTC midnight.
     const intradayData = hasIntradayData(attr);
-    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, intradayData);
+    const chartData = buildChartData({
+      haData: HA_HISTORY_RANGES.includes(this._timeRange)
+        ? this._cachedHaHistory(entityId, this._timeRange as "1T" | "1W")
+        : null,
+      yahooHistory,
+      range: this._timeRange,
+      livePrice: price,
+      previousClose: attr.previous_close ?? 0,
+      intradayData,
+    });
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
     const trendColor = isPositive
@@ -812,43 +730,12 @@ export class EasyStockCard extends LitElement {
   private _renderSparkline(history: [string, number][], color: string, range: TimeRange) {
     if (history.length < 2) return nothing;
 
-    const prices = history.map(([, p]) => p);
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    const priceRange = max - min || 1;
-    const W = 200;
-    const H = 48;
-    const pad = 2;
-
-    // 1T with real timestamps: time-proportional x-axis spanning the full day (00:00–23:59).
-    // At noon the line covers 50 % of the chart width; at 23:59 it covers 100 %.
-    const isIntraday = range === "1T" && history[0][0].includes("T");
-
-    let points: string;
-    if (isIntraday) {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const dayMs = 24 * 60 * 60 * 1000;
-      points = history
-        .map(([t, p]) => {
-          const xFrac = Math.max(0, Math.min(1, (new Date(t).getTime() - todayStart.getTime()) / dayMs));
-          const x = pad + xFrac * (W - pad * 2);
-          const y = pad + (1 - (p - min) / priceRange) * (H - pad * 2);
-          return `${x.toFixed(1)},${y.toFixed(1)}`;
-        })
-        .join(" ");
-    } else {
-      points = prices
-        .map((p, i) => {
-          const x = pad + (i / (prices.length - 1)) * (W - pad * 2);
-          const y = pad + (1 - (p - min) / priceRange) * (H - pad * 2);
-          return `${x.toFixed(1)},${y.toFixed(1)}`;
-        })
-        .join(" ");
-    }
+    const points = sparklinePoints(history, range)
+      .map(({ x, y }) => `${x.toFixed(1)},${y.toFixed(1)}`)
+      .join(" ");
 
     return svg`
-      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" class="sparkline-svg" aria-hidden="true">
+      <svg viewBox="0 0 ${SPARKLINE_WIDTH} ${SPARKLINE_HEIGHT}" preserveAspectRatio="none" class="sparkline-svg" aria-hidden="true">
         <polyline
           points="${points}"
           fill="none"
@@ -863,7 +750,7 @@ export class EasyStockCard extends LitElement {
 
   private _formatPrice(price: number, currency: string, plain = false): string {
     if (isNaN(price)) return "–";
-    const maxDigits = price < 10 ? 4 : 2;
+    const maxDigits = priceFractionDigits(price);
     // RAW mode (or any non-ISO native code like "GBp"): show the value with the literal
     // currency code rather than a localized symbol, so it stays unambiguous.
     if (plain) return `${price.toFixed(maxDigits)} ${currency}`;

@@ -9,6 +9,7 @@ import {
   resolveTargetCurrency,
   entityIdOf,
   entityCurrencyOverride,
+  priceFractionDigits,
 } from "./currency";
 
 // Realistic frankfurter-style rate table (base EUR).
@@ -148,5 +149,35 @@ describe("entity config accessors", () => {
 
   it("entityCurrencyOverride is undefined for an object entry without override", () => {
     expect(entityCurrencyOverride({ entity: "sensor.aapl" })).toBeUndefined();
+  });
+});
+
+describe("priceFractionDigits", () => {
+  it("keeps a sub-cent crypto quote readable instead of formatting it to zero", () => {
+    // SHIB-EUR at 4.35e-06 rendered as "0.0000" under the flat 4-digit rule.
+    expect(priceFractionDigits(4.35e-6)).toBe(10);
+  });
+
+  it("adds a digit per decade below one", () => {
+    expect(priceFractionDigits(0.07137)).toBe(6);
+    expect(priceFractionDigits(0.9)).toBe(5);
+  });
+
+  it("leaves every price of one or more exactly as it formatted before", () => {
+    expect(priceFractionDigits(1.182)).toBe(4);
+    expect(priceFractionDigits(5.05)).toBe(4);
+    expect(priceFractionDigits(9.99)).toBe(4);
+    expect(priceFractionDigits(10.5)).toBe(2);
+    expect(priceFractionDigits(450.2)).toBe(2);
+    expect(priceFractionDigits(14399.77)).toBe(2);
+  });
+
+  it("stays inside the range Intl.NumberFormat accepts", () => {
+    expect(priceFractionDigits(1e-30)).toBeLessThanOrEqual(20);
+  });
+
+  it("falls back to two digits for values that have no magnitude", () => {
+    expect(priceFractionDigits(0)).toBe(2);
+    expect(priceFractionDigits(NaN)).toBe(2);
   });
 });

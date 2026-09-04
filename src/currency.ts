@@ -120,3 +120,18 @@ export function entityIdOf(entry: EntityConfig): string {
 export function entityCurrencyOverride(entry: EntityConfig): string | undefined {
   return typeof entry === "string" ? undefined : entry.display_currency;
 }
+
+/**
+ * Fraction digits a price should be formatted with.
+ *
+ * A flat rule of "4 digits below 10, otherwise 2" loses the price entirely once
+ * a quote drops far enough: SHIB-EUR at 4.35e-06 formatted as "0.0000". Below
+ * one, add a digit per decade so the significant figures survive; at one and
+ * above this returns exactly what the flat rule returned (#17).
+ */
+export function priceFractionDigits(price: number): number {
+  if (!Number.isFinite(price) || price === 0) return 2;
+  const magnitude = Math.floor(Math.log10(Math.abs(price)));
+  if (magnitude >= 1) return 2;
+  return Math.min(20, 4 - magnitude);
+}

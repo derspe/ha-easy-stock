@@ -974,8 +974,92 @@ function entityIdOf(entry) {
 function entityCurrencyOverride(entry) {
   return typeof entry === "string" ? void 0 : entry.display_currency;
 }
+function priceFractionDigits(price) {
+  if (!Number.isFinite(price) || price === 0) return 2;
+  const magnitude = Math.floor(Math.log10(Math.abs(price)));
+  if (magnitude >= 1) return 2;
+  return Math.min(20, 4 - magnitude);
+}
 function hasIntradayData(attr) {
   return attr.traded_today ?? attr.price_is_live ?? false;
+}
+const SPARKLINE_WIDTH = 200;
+const SPARKLINE_HEIGHT = 48;
+const SPARKLINE_PAD = 2;
+const MIN_RELATIVE_SPAN = 1e-3;
+function sparklinePoints(history, range, now = /* @__PURE__ */ new Date()) {
+  const prices = history.map(([, p2]) => p2);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const mid = (min + max) / 2;
+  const span = Math.max(max - min, Math.abs(mid) * MIN_RELATIVE_SPAN) || 1;
+  const low = mid - span / 2;
+  const innerW = SPARKLINE_WIDTH - SPARKLINE_PAD * 2;
+  const innerH = SPARKLINE_HEIGHT - SPARKLINE_PAD * 2;
+  const isIntraday = range === "1T" && history[0][0].includes("T");
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const dayMs = 24 * 60 * 60 * 1e3;
+  return history.map(([t2, p2], i2) => {
+    const xFrac = isIntraday ? Math.max(0, Math.min(1, (new Date(t2).getTime() - todayStart.getTime()) / dayMs)) : i2 / (history.length - 1);
+    return {
+      x: SPARKLINE_PAD + xFrac * innerW,
+      y: SPARKLINE_PAD + (1 - (p2 - low) / span) * innerH
+    };
+  });
+}
+const HA_HISTORY_RANGES = ["1T", "1W"];
+function dayStr(d2) {
+  return `${d2.getFullYear()}-${String(d2.getMonth() + 1).padStart(2, "0")}-${String(d2.getDate()).padStart(2, "0")}`;
+}
+function buildChartData(input) {
+  const { haData, yahooHistory, range, livePrice, previousClose, intradayData } = input;
+  const now = input.now ?? /* @__PURE__ */ new Date();
+  const today = dayStr(now);
+  if (HA_HISTORY_RANGES.includes(range)) {
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const midnightISO = todayStart.toISOString();
+    if (range === "1T") {
+      if (!intradayData) {
+        return [[midnightISO, livePrice], [now.toISOString(), livePrice]];
+      }
+      const lastYahooEntry = yahooHistory.length > 0 ? yahooHistory[yahooHistory.length - 1] : null;
+      const prev = lastYahooEntry && lastYahooEntry[0] < today ? lastYahooEntry[1] : previousClose > 0 ? previousClose : livePrice;
+      if (haData && haData.length >= 1) {
+        const todayData = haData.filter(([t2]) => new Date(t2) >= todayStart);
+        if (todayData.length >= 1) {
+          const series = [[midnightISO, prev], [todayData[0][0], prev], ...todayData];
+          if (Number.isFinite(livePrice)) series.push([now.toISOString(), livePrice]);
+          return series;
+        }
+      }
+      return [[midnightISO, prev], [now.toISOString(), livePrice]];
+    }
+    if (haData && haData.length >= 2) return haData;
+    const base2 = yahooHistory.slice(-4);
+    return base2.length > 0 ? [...base2, [today, livePrice]] : [["prev", previousClose], [today, livePrice]];
+  }
+  let base;
+  if (range === "1M") {
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - 30);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    const filtered = yahooHistory.filter(([d2]) => d2 >= cutoffStr);
+    base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
+  } else if (range === "YTD") {
+    const jan1 = `${now.getFullYear()}-01-01`;
+    const filtered = yahooHistory.filter(([d2]) => d2 >= jan1);
+    const prevYearEntries = yahooHistory.filter(([d2]) => d2 < jan1);
+    const prevYearClose = prevYearEntries[prevYearEntries.length - 1];
+    base = prevYearClose ? [prevYearClose, ...filtered] : filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
+  } else {
+    base = yahooHistory;
+  }
+  if (base.length === 0) return [[today, livePrice]];
+  const last = base[base.length - 1];
+  if (last[0] === today) return [...base.slice(0, -1), [today, livePrice]];
+  return [...base, [today, livePrice]];
 }
 var __defProp = Object.defineProperty;
 var __decorateClass = (decorators, target, key, kind) => {
@@ -1363,7 +1447,6 @@ __decorateClass([
   r()
 ], EasyStockCardEditor.prototype, "_dragIndex");
 const HA_HISTORY_TTL = 5 * 60 * 1e3;
-const HA_HISTORY_RANGES = ["1T", "1W"];
 const _EasyStockCard = class _EasyStockCard extends i {
   constructor() {
     super(...arguments);
@@ -1474,66 +1557,6 @@ const _EasyStockCard = class _EasyStockCard extends i {
   // -------------------------------------------------------------------------
   // Chart data helpers
   // -------------------------------------------------------------------------
-  /** Today as "YYYY-MM-DD" in local time */
-  _todayStr() {
-    const d2 = /* @__PURE__ */ new Date();
-    return `${d2.getFullYear()}-${String(d2.getMonth() + 1).padStart(2, "0")}-${String(d2.getDate()).padStart(2, "0")}`;
-  }
-  /**
-   * Build chart data for the selected range.
-   * 1T / 1W: HA recorder history (5-min resolution), fallback to sensor attributes.
-   * 1M / YTD / 1J: Yahoo daily history from sensor attribute.
-   */
-  _buildChartData(entityId, yahooHistory, range, livePrice, previousClose, intradayData) {
-    const today = this._todayStr();
-    if (HA_HISTORY_RANGES.includes(range)) {
-      const haData = this._cachedHaHistory(entityId, range);
-      if (range === "1T") {
-        if (!intradayData) {
-          return [["prev", livePrice], [today, livePrice]];
-        }
-        const lastYahooEntry = yahooHistory.length > 0 ? yahooHistory[yahooHistory.length - 1] : null;
-        const prev = lastYahooEntry && lastYahooEntry[0] < today ? lastYahooEntry[1] : previousClose > 0 ? previousClose : livePrice;
-        const todayStart = /* @__PURE__ */ new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const midnightISO = todayStart.toISOString();
-        if (haData && haData.length >= 1) {
-          const todayData = haData.filter(([t2]) => new Date(t2) >= todayStart);
-          if (todayData.length >= 1) {
-            return [[midnightISO, prev], [todayData[0][0], prev], ...todayData];
-          }
-        }
-        return [[midnightISO, prev], [(/* @__PURE__ */ new Date()).toISOString(), livePrice]];
-      }
-      if (haData && haData.length >= 2) return haData;
-      const base2 = yahooHistory.slice(-4);
-      return base2.length > 0 ? [...base2, [today, livePrice]] : [["prev", previousClose], [today, livePrice]];
-    }
-    let base;
-    if (range === "1M") {
-      const cutoff = /* @__PURE__ */ new Date();
-      cutoff.setDate(cutoff.getDate() - 30);
-      const cutoffStr = cutoff.toISOString().slice(0, 10);
-      const filtered = yahooHistory.filter(([d2]) => d2 >= cutoffStr);
-      base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
-    } else if (range === "YTD") {
-      const jan1 = `${(/* @__PURE__ */ new Date()).getFullYear()}-01-01`;
-      const filtered = yahooHistory.filter(([d2]) => d2 >= jan1);
-      const prevYearEntries = yahooHistory.filter(([d2]) => d2 < jan1);
-      const prevYearClose = prevYearEntries[prevYearEntries.length - 1];
-      if (prevYearClose) {
-        base = [prevYearClose, ...filtered];
-      } else {
-        base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
-      }
-    } else {
-      base = yahooHistory;
-    }
-    if (base.length === 0) return [[today, livePrice]];
-    const last = base[base.length - 1];
-    if (last[0] === today) return [...base.slice(0, -1), [today, livePrice]];
-    return [...base, [today, livePrice]];
-  }
   _calcPeriodChange(chartData, range, dailyChangePct) {
     if (chartData.length < 2) return range === "1T" ? dailyChangePct : 0;
     const oldest = chartData[0][1];
@@ -1614,7 +1637,14 @@ const _EasyStockCard = class _EasyStockCard extends i {
     }
     const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
     const intradayData = hasIntradayData(attr);
-    const chartData = this._buildChartData(entityId, yahooHistory, this._timeRange, price, attr.previous_close ?? 0, intradayData);
+    const chartData = buildChartData({
+      haData: HA_HISTORY_RANGES.includes(this._timeRange) ? this._cachedHaHistory(entityId, this._timeRange) : null,
+      yahooHistory,
+      range: this._timeRange,
+      livePrice: price,
+      previousClose: attr.previous_close ?? 0,
+      intradayData
+    });
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
     const trendColor = isPositive ? "var(--success-color, #4caf50)" : "var(--error-color, #f44336)";
@@ -1652,34 +1682,9 @@ const _EasyStockCard = class _EasyStockCard extends i {
   }
   _renderSparkline(history, color, range) {
     if (history.length < 2) return A;
-    const prices = history.map(([, p2]) => p2);
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    const priceRange = max - min || 1;
-    const W = 200;
-    const H2 = 48;
-    const pad = 2;
-    const isIntraday = range === "1T" && history[0][0].includes("T");
-    let points;
-    if (isIntraday) {
-      const todayStart = /* @__PURE__ */ new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const dayMs = 24 * 60 * 60 * 1e3;
-      points = history.map(([t2, p2]) => {
-        const xFrac = Math.max(0, Math.min(1, (new Date(t2).getTime() - todayStart.getTime()) / dayMs));
-        const x2 = pad + xFrac * (W - pad * 2);
-        const y3 = pad + (1 - (p2 - min) / priceRange) * (H2 - pad * 2);
-        return `${x2.toFixed(1)},${y3.toFixed(1)}`;
-      }).join(" ");
-    } else {
-      points = prices.map((p2, i2) => {
-        const x2 = pad + i2 / (prices.length - 1) * (W - pad * 2);
-        const y3 = pad + (1 - (p2 - min) / priceRange) * (H2 - pad * 2);
-        return `${x2.toFixed(1)},${y3.toFixed(1)}`;
-      }).join(" ");
-    }
+    const points = sparklinePoints(history, range).map(({ x: x2, y: y3 }) => `${x2.toFixed(1)},${y3.toFixed(1)}`).join(" ");
     return w`
-      <svg viewBox="0 0 ${W} ${H2}" preserveAspectRatio="none" class="sparkline-svg" aria-hidden="true">
+      <svg viewBox="0 0 ${SPARKLINE_WIDTH} ${SPARKLINE_HEIGHT}" preserveAspectRatio="none" class="sparkline-svg" aria-hidden="true">
         <polyline
           points="${points}"
           fill="none"
@@ -1693,7 +1698,7 @@ const _EasyStockCard = class _EasyStockCard extends i {
   }
   _formatPrice(price, currency, plain = false) {
     if (isNaN(price)) return "–";
-    const maxDigits = price < 10 ? 4 : 2;
+    const maxDigits = priceFractionDigits(price);
     if (plain) return `${price.toFixed(maxDigits)} ${currency}`;
     try {
       return new Intl.NumberFormat(void 0, {
