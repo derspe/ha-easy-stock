@@ -1096,7 +1096,7 @@ async function fetchRates() {
   }
 }
 console.info(
-  `[easy-stock-card] v${"0.5.0"} loaded from ${import.meta.url}`
+  `[easy-stock-card] v${"0.5.1"} loaded from ${import.meta.url}`
 );
 window.customCards = window.customCards || [];
 if (!window.customCards.some((c2) => c2.type === "easy-stock-card")) {
