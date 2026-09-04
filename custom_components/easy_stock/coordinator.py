@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import aiohttp
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import YAHOO_CHART_URL, YAHOO_CHART_URL_MINI
 from .market_state import derive_market_state
@@ -111,7 +112,12 @@ class StockDataCoordinator(DataUpdateCoordinator):
                     await self._store.async_save(self._history)
 
             # Price logic — same as before, based on fetched (recent) data
-            today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            # Home Assistant's own timezone, not UTC. The card cuts its 1T series
+            # at local midnight, so a UTC "today" made the hours between local and
+            # UTC midnight belong to the previous session: east of Greenwich the
+            # first hours of a Saturday still counted as Friday, and Yahoo's
+            # post-close revisions were written into the weekend chart (#17).
+            today_str = dt_util.now().strftime("%Y-%m-%d")
             meta_price = meta.get("regularMarketPrice") or 0
 
             # traded_today: the asset produced a price today, so an intraday view

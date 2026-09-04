@@ -406,3 +406,55 @@ async def test_an_ordinary_quote_is_unaffected(hass):
     assert data["previous_close"] == pytest.approx(445.2)
     assert data["change"] == pytest.approx(5.4)
 
+
+# ---------------------------------------------------------------------------
+# Day boundary (issue #17)
+# ---------------------------------------------------------------------------
+
+
+async def test_a_stock_has_not_traded_today_in_the_local_hours_before_utc_midnight(hass, freezer):
+    """Saturday 00:30 in Berlin is still Friday in UTC.
+
+    The card cuts its 1T series at *local* midnight, so while the coordinator
+    called Friday "today" it kept writing Yahoo's post-close revisions of the
+    Friday price into what the card reads as Saturday. Those two hours of noise
+    were the entire content of the weekend chart.
+    """
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    freezer.move_to("2024-05-31T22:30:00+00:00")  # Sat 00:30 local, Fri 22:30 UTC
+
+    days = [("2024-05-30", 100.0), ("2024-05-31", 101.0)]  # last session: Friday
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(
+        make_yahoo_payload(
+            days_prices=days,
+            meta_price=101.0,
+            trading_period=make_trading_period(open_now=False),
+        )
+    )
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["traded_today"] is False
+
+
+async def test_a_stock_has_traded_today_while_its_session_is_running(hass, freezer):
+    """Guard for the above: the ordinary case must keep reporting True."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    freezer.move_to("2024-05-31T13:00:00+00:00")  # Fri 15:00 local, mid-session
+
+    days = [("2024-05-30", 100.0), ("2024-05-31", 101.0)]
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(
+        make_yahoo_payload(
+            days_prices=days,
+            meta_price=101.0,
+            trading_period=make_trading_period(open_now=True),
+        )
+    )
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["traded_today"] is True
