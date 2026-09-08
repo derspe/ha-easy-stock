@@ -72,3 +72,24 @@ def derive_market_state(meta: dict, now: int | None = None) -> str | None:
             return state
 
     return "CLOSED"
+
+
+def last_trade_date(meta: dict, tzinfo) -> str | None:
+    """Local "YYYY-MM-DD" of Yahoo's last trade, or None if it ships no usable one.
+
+    "Did this asset trade today" used to be inferred by comparing
+    ``regularMarketPrice`` against the close of the last daily candle: a
+    difference meant a session must be running that Yahoo had not written a
+    candle for yet. That reads a weekend as a trading day whenever the two
+    legitimately differ. Gold is the case that surfaced it (#17): with
+    ``includePrePost=false`` the daily candle carries the pit close, while
+    ``regularMarketPrice`` is the last trade of the electronic session, which
+    runs on for hours. The two sat 1.06 % apart all weekend, so the card drew a
+    rising line for an asset that had not traded since Friday.
+
+    ``regularMarketTime`` answers the question directly instead of inferring it.
+    """
+    ts = meta.get("regularMarketTime")
+    if not isinstance(ts, int) or isinstance(ts, bool) or ts <= 0:
+        return None
+    return datetime.fromtimestamp(ts, tz=timezone.utc).astimezone(tzinfo).strftime("%Y-%m-%d")
