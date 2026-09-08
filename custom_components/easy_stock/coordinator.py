@@ -7,7 +7,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import YAHOO_CHART_URL, YAHOO_CHART_URL_MINI
-from .market_state import derive_market_state
+from .market_state import derive_market_state, last_trade_date
 from .precision import price_decimals, round_price
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,6 +122,11 @@ class StockDataCoordinator(DataUpdateCoordinator):
 
             # traded_today: the asset produced a price today, so an intraday view
             # has something to show. Stays true once the exchange has shut.
+            # Yahoo's own timestamp of the last trade, in Home Assistant's timezone.
+            # None when it ships none, in which case the price comparison below
+            # stands in -- see last_trade_date() for why that is only a fallback.
+            traded_on = last_trade_date(meta, dt_util.now().tzinfo)
+
             traded_today = False
             if len(fetched) >= 2:
                 last_date, last_price = fetched[-1]
@@ -132,18 +137,28 @@ class StockDataCoordinator(DataUpdateCoordinator):
                     previous_close = prev_price
                     traded_today = True
                 else:
-                    if meta_price and abs(meta_price - last_price) / last_price > 0.0001:
+                    if traded_on is not None:
+                        session_today = traded_on == today_str
+                    else:
+                        session_today = bool(meta_price) and (
+                            abs(meta_price - last_price) / last_price > 0.0001
+                        )
+
+                    if session_today:
+                        # A session is running that Yahoo has no candle for yet.
                         current_price = meta_price
                         previous_close = last_price
                         traded_today = True
                     else:
-                        current_price = last_price
+                        # Nothing traded today: keep the last price anyone paid,
+                        # and measure the change against the session before it.
+                        current_price = meta_price or last_price
                         previous_close = prev_price
                         traded_today = False
             else:
                 current_price = meta_price or (fetched[-1][1] if fetched else 0)
                 previous_close = meta.get("previousClose") or meta.get("chartPreviousClose") or 0
-                traded_today = bool(meta_price)
+                traded_today = (traded_on == today_str) if traded_on is not None else bool(meta_price)
 
             # price_is_live: the exchange is in session right now, so the price
             # still moves. Derived from currentTradingPeriod because a candle

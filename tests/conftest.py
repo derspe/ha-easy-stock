@@ -40,7 +40,8 @@ def make_trading_period(open_now=True, now=None):
     }
 
 
-def make_yahoo_payload(days_prices=None, meta_price=None, trading_period=_DEFAULT_PERIOD):
+def make_yahoo_payload(days_prices=None, meta_price=None, trading_period=_DEFAULT_PERIOD,
+                       market_time=None):
     """Build a minimal Yahoo Finance chart API response.
 
     Mirrors the live v8 chart API: it carries currentTradingPeriod and no
@@ -67,6 +68,8 @@ def make_yahoo_payload(days_prices=None, meta_price=None, trading_period=_DEFAUL
         "previousClose": prev_close,
         "chartPreviousClose": prev_close,
     }
+    if market_time is not None:
+        meta["regularMarketTime"] = market_time
     if trading_period is not None:
         meta["currentTradingPeriod"] = trading_period
     return {

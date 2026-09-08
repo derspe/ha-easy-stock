@@ -4,7 +4,10 @@ Yahoo removed ``meta.marketState`` from the v8 chart API (issue #13), so the
 session status has to be reconstructed from ``meta.currentTradingPeriod``,
 which still carries the pre/regular/post epoch windows.
 """
-from custom_components.easy_stock.market_state import derive_market_state
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+
+from custom_components.easy_stock.market_state import derive_market_state, last_trade_date
 
 
 def _meta(pre=None, regular=None, post=None, **extra):
@@ -120,3 +123,28 @@ def test_explicit_market_state_from_yahoo_wins():
     """If Yahoo ever restores the field, it is authoritative."""
     meta = _meta(regular=(XETRA_OPEN, XETRA_CLOSE), marketState="POST")
     assert derive_market_state(meta, now=XETRA_OPEN + 3600) == "POST"
+
+
+# ---------------------------------------------------------------------------
+# last_trade_date (issue #17, gold on a weekend)
+# ---------------------------------------------------------------------------
+
+
+def test_last_trade_date_is_the_local_date_of_yahoos_last_trade():
+    # Friday 23:15 in Europe/Berlin — a US index after its close.
+    ts = int(datetime(2026, 9, 4, 21, 15, tzinfo=timezone.utc).timestamp())
+    assert last_trade_date({"regularMarketTime": ts}, ZoneInfo("Europe/Berlin")) == "2026-09-04"
+
+
+def test_last_trade_date_follows_the_given_timezone_across_midnight():
+    # 23:15 UTC on the 4th is already the 5th in Tokyo.
+    ts = int(datetime(2026, 9, 4, 23, 15, tzinfo=timezone.utc).timestamp())
+    assert last_trade_date({"regularMarketTime": ts}, ZoneInfo("Asia/Tokyo")) == "2026-09-05"
+
+
+def test_last_trade_date_is_none_when_yahoo_ships_no_timestamp():
+    assert last_trade_date({}, ZoneInfo("Europe/Berlin")) is None
+
+
+def test_last_trade_date_is_none_when_the_timestamp_is_unusable():
+    assert last_trade_date({"regularMarketTime": "nonsense"}, ZoneInfo("Europe/Berlin")) is None

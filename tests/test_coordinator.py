@@ -458,3 +458,84 @@ async def test_a_stock_has_traded_today_while_its_session_is_running(hass, freez
         data = await coord._async_update_data()
 
     assert data["traded_today"] is True
+
+
+# ---------------------------------------------------------------------------
+# traded_today from Yahoo's last trade timestamp (issue #17, gold on a weekend)
+# ---------------------------------------------------------------------------
+
+GOLD_DAYS = [("2026-09-03", 4491.70), ("2026-09-04", 4429.80)]
+GOLD_LAST_TRADE = int(datetime(2026, 9, 4, 19, 0, tzinfo=timezone.utc).timestamp())
+
+
+async def test_a_future_that_rested_all_weekend_has_not_traded_today(hass, freezer):
+    """Gold's daily candle is the pit close, regularMarketPrice the electronic one.
+
+    The two sat 1.06 % apart over the weekend, and the old rule read any such
+    difference as "a session must be running", so the card drew a rising line
+    for an asset that had not traded since Friday.
+    """
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    freezer.move_to("2026-09-05T09:15:00+00:00")  # Sat 11:15 local
+
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(
+        make_yahoo_payload(
+            days_prices=GOLD_DAYS,
+            meta_price=4476.60,
+            market_time=GOLD_LAST_TRADE,
+            trading_period=make_trading_period(open_now=False),
+        )
+    )
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["traded_today"] is False
+    # still the last price anyone paid, not the pit close
+    assert data["current_price"] == pytest.approx(4476.60)
+    # the close before Friday's session, so the change describes Friday
+    assert data["previous_close"] == pytest.approx(4491.70)
+
+
+async def test_a_running_session_counts_before_yahoo_writes_todays_candle(hass, freezer):
+    """The case the old rule existed for, and which must keep working."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    freezer.move_to("2026-09-08T09:15:00+00:00")  # Tue 11:15 local
+
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(
+        make_yahoo_payload(
+            days_prices=[("2026-09-04", 100.0), ("2026-09-07", 101.0)],
+            meta_price=102.0,
+            market_time=int(datetime(2026, 9, 8, 9, 10, tzinfo=timezone.utc).timestamp()),
+            trading_period=make_trading_period(open_now=True),
+        )
+    )
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["traded_today"] is True
+    assert data["current_price"] == pytest.approx(102.0)
+    assert data["previous_close"] == pytest.approx(101.0)
+
+
+async def test_without_a_last_trade_timestamp_the_price_heuristic_still_applies(hass, freezer):
+    """Yahoo has dropped fields before; the old rule stays as the fallback."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    freezer.move_to("2026-09-08T09:15:00+00:00")
+
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(
+        make_yahoo_payload(
+            days_prices=[("2026-09-04", 100.0), ("2026-09-07", 101.0)],
+            meta_price=102.0,
+            trading_period=make_trading_period(open_now=True),
+        )
+    )
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["traded_today"] is True
