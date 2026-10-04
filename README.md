@@ -8,6 +8,14 @@ This integration started as a fork of [Easy Stock](https://github.com/derspe/ha-
 a separate integration with its own domain (`zwitserleven_fondsen`), card
 (`custom:zwitserleven-fondsen-card`) and API endpoint. Both can be installed side by side.
 
+> [!WARNING]
+> Zwitserleven offers no API for fund prices, so this integration reads them from the public
+> [fund overview page](https://www.zwitserleven.nl/over-zwitserleven/verantwoord-beleggen/fondsen/)
+> by parsing its HTML. It breaks when Zwitserleven changes the layout or content of that page, or
+> moves it to another address. The fund sensors then become unavailable and the Home Assistant log
+> shows why, until the integration is updated to match. This integration is not affiliated with
+> Zwitserleven.
+
 ## Features
 
 - **All Zwitserleven funds** — prices are read from the public
