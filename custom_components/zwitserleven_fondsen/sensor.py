@@ -1,38 +1,63 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, CONF_SYMBOL, CONF_NAME
 from .coordinator import ZwitserlevenDataCoordinator
 
+if TYPE_CHECKING:
+    from . import ZwitserlevenConfigEntry
+
+# Every update comes from the coordinator, so entities never poll on their own.
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ZwitserlevenConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    coordinator: ZwitserlevenDataCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([ZwitserlevenSensor(coordinator, entry)])
+    async_add_entities([ZwitserlevenSensor(entry.runtime_data, entry)])
 
 
 class ZwitserlevenSensor(CoordinatorEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:chart-line"
+    _attr_native_unit_of_measurement = "EUR"
+    # The fund is the device and the price its only sensor, so the sensor
+    # takes the device's name.
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    def __init__(self, coordinator: ZwitserlevenDataCoordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: ZwitserlevenDataCoordinator, entry: ZwitserlevenConfigEntry
+    ) -> None:
         super().__init__(coordinator)
-        self._entry = entry
-        self._attr_unique_id = f"zwitserleven_fondsen_{entry.data[CONF_SYMBOL]}"
-        name = entry.options.get(CONF_NAME) or entry.data.get(CONF_NAME) or entry.title or entry.data[CONF_SYMBOL]
-        self._attr_name = name.strip()
+        symbol = entry.data[CONF_SYMBOL]
+        self._attr_unique_id = f"zwitserleven_fondsen_{symbol}"
+        name = (
+            entry.options.get(CONF_NAME)
+            or entry.data.get(CONF_NAME)
+            or entry.title
+            or symbol
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, symbol)},
+            name=name.strip(),
+            manufacturer="Zwitserleven",
+            model=symbol,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> float | None:
         return self.coordinator.data["current_price"] if self.coordinator.data else None
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        return "EUR"
 
     @property
     def extra_state_attributes(self) -> dict:

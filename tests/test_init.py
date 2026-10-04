@@ -34,19 +34,11 @@ def _mock_coordinator():
     )
 
 
-async def test_unload_entry_without_stored_data_succeeds(hass):
-    """Unloading must not raise KeyError when the entry's data was never stored.
-
-    This happens when async_setup_entry failed partway before
-    hass.data[DOMAIN][entry.entry_id] was populated, or in tests where
-    async_setup_entry is mocked out entirely. Previously this used
-    hass.data[DOMAIN].pop(entry.entry_id) without a default, which raised
-    KeyError (silently swallowed by Home Assistant, but reported as an
-    unload failure rather than a success).
-    """
+async def test_unload_entry_without_runtime_data_succeeds(hass):
+    """Unloading must not depend on async_setup_entry having got far enough
+    to set entry.runtime_data."""
     entry = MockConfigEntry(domain=DOMAIN, data={"symbol": "LTAAF"})
     entry.add_to_hass(hass)
-    hass.data.setdefault(DOMAIN, {})
 
     with patch.object(
         hass.config_entries, "async_unload_platforms", return_value=True
@@ -87,8 +79,11 @@ async def test_setup_survives_a_failing_card_registration(hass):
     ):
         assert await async_setup(hass, {}) is True
 
-    # The rest of async_setup still ran.
-    assert DOMAIN in hass.data
+    # The rest of async_setup still ran: the history endpoint is registered.
+    assert any(
+        resource.canonical == "/api/zwitserleven_fondsen/history"
+        for resource in hass.http.app.router.resources()
+    )
 
 
 async def test_re_adding_an_entry_restores_the_card_without_a_restart(hass):

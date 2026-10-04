@@ -1,7 +1,7 @@
 import logging
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 
+type ZwitserlevenConfigEntry = ConfigEntry[ZwitserlevenDataCoordinator]
+
 
 class ZwitserlevenHistoryView(HomeAssistantView):
     """REST endpoint: GET /api/zwitserleven_fondsen/history?symbol=LTAAF"""
@@ -33,9 +35,9 @@ class ZwitserlevenHistoryView(HomeAssistantView):
         if not symbol:
             return self.json_message("symbol parameter required", status_code=400)
 
-        for coordinator in hass.data.get(DOMAIN, {}).values():
-            if hasattr(coordinator, "symbol") and coordinator.symbol == symbol:
-                return self.json({"symbol": symbol, "history": coordinator._history or []})
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.state is ConfigEntryState.LOADED and entry.runtime_data.symbol == symbol:
+                return self.json({"symbol": symbol, "history": entry.runtime_data.history})
 
         return self.json_message(f"No sensor for symbol {symbol}", status_code=404)
 
@@ -64,17 +66,18 @@ async def _async_register_card_safely(hass: HomeAssistant) -> None:
         )
 
 
+def _history_store(hass: HomeAssistant, symbol: str) -> Store:
+    return Store(hass, version=1, key=f"zwitserleven_fondsen.{symbol.lower()}.history")
+
+
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Register the card, the shared data store and the history endpoint."""
+    """Register the card and the history endpoint."""
     await _async_register_card_safely(hass)
-    hass.data.setdefault(DOMAIN, {})
     hass.http.register_view(ZwitserlevenHistoryView())
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    hass.data.setdefault(DOMAIN, {})
-
+async def async_setup_entry(hass: HomeAssistant, entry: ZwitserlevenConfigEntry) -> bool:
     # Removing the last config entry unregisters the card but does not unload
     # the component: ConfigEntries._async_remove never touches
     # hass.config.components, so adding an entry back afterwards takes
@@ -91,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scan_interval = entry.options.get(
         CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     )
-    store = Store(hass, version=1, key=f"zwitserleven_fondsen.{symbol.lower()}.history")
+    store = _history_store(hass, symbol)
     coordinator = ZwitserlevenDataCoordinator(
         hass,
         symbol=symbol,
@@ -100,18 +103,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         page=get_page(hass),
     )
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-    return unload_ok
+async def async_unload_entry(hass: HomeAssistant, entry: ZwitserlevenConfigEntry) -> bool:
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -119,7 +119,9 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Drop the card registration once the last entry is gone."""
+    """Delete the fund's stored prices; drop the card once the last entry is gone."""
+    if CONF_SYMBOL in entry.data:
+        await _history_store(hass, entry.data[CONF_SYMBOL]).async_remove()
     if hass.config_entries.async_entries(DOMAIN):
         return
     await async_unregister_card(hass)

@@ -34,6 +34,11 @@ class ZwitserlevenDataCoordinator(DataUpdateCoordinator):
         # None = not yet loaded from store (populated on first _async_update_data call)
         self._history: list | None = None
 
+    @property
+    def history(self) -> list:
+        """Stored daily prices as [["YYYY-MM-DD", price], ...], oldest first."""
+        return self._history or []
+
     async def _async_update_data(self) -> dict:
         try:
             funds = await self._page.async_get_funds()

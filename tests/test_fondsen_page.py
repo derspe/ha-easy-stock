@@ -63,6 +63,32 @@ def test_parse_date():
     assert parse_date("02-10-2026") == "2026-10-02"
 
 
+def test_parse_date_rejects_garbage():
+    with pytest.raises(ValueError):
+        parse_date("vandaag")
+
+
+def _row(symbol, date="02-10-2026", rate="€ 10,00", with_rate=True):
+    rate_cell = f'<td class="fundoverview__rate">{rate}</td>' if with_rate else ""
+    return f"""
+      <tr class="fundoverview__item">
+        <td class="fundoverview__fund"><a>{symbol} fund</a></td>
+        <td class="fundoverview__date">{date}</td>
+        {rate_cell}
+        <td><button id="{symbol}" class="icon-favorite"></button></td>
+      </tr>"""
+
+
+def test_row_with_a_bad_date_is_skipped():
+    html = f'<table class="fundoverview">{_row("GOOD")}{_row("BAD", date="n.v.t.")}</table>'
+    assert set(parse_funds(html)) == {"GOOD"}
+
+
+def test_row_with_a_missing_column_is_skipped():
+    html = f'<table class="fundoverview">{_row("GOOD")}{_row("BAD", with_rate=False)}</table>'
+    assert set(parse_funds(html)) == {"GOOD"}
+
+
 def test_page_without_the_table_raises():
     with pytest.raises(FondsenPageError):
         parse_funds("<html><body></body></html>")

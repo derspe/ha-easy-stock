@@ -84,6 +84,16 @@ include the console line from step 2 and the `zwitserleven_fondsen.frontend` log
 > cache-buster, and the file is served with a 31-day cache header. After an update you will keep
 > getting the old card until you hard-refresh every browser that has it cached.
 
+### Removal
+
+1. Go to **Settings → Devices & Services → Zwitserleven Fondsen**.
+2. For each fund, open the **⋮** menu and choose **Delete**. Removing the last fund also removes
+   the card's dashboard resource.
+3. Remove any `custom:zwitserleven-fondsen-card` cards from your dashboards.
+4. Delete the `custom_components/zwitserleven_fondsen/` folder and restart Home Assistant.
+
+Deleting a fund also deletes the daily prices stored for it.
+
 ## Setup
 
 ### Add a fund
@@ -98,8 +108,8 @@ include the console line from step 2 and the `zwitserleven_fondsen.frontend` log
 | **Name** | Display name shown in the card (optional — falls back to the fund name if left empty) |
 | **Update interval** | How often to poll the Zwitserleven website in seconds (60–86400, default 3600) |
 
-Repeat for each fund you want to track. Each fund becomes its own sensor entity. Funds you have
-already added are left out of the list.
+Repeat for each fund you want to track. Each fund becomes a device with one price sensor. Funds
+you have already added are left out of the list.
 
 ## Sensor attributes
 

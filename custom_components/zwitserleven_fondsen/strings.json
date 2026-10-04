@@ -8,6 +8,11 @@
           "symbol": "Fund",
           "name": "Display name (optional)",
           "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "symbol": "Funds you have already added are not listed.",
+          "name": "Name for the fund's device and sensor. Leave empty to use the fund name from Zwitserleven.",
+          "scan_interval": "How often to check the Zwitserleven website. Prices change once a day, so an hour is plenty."
         }
       }
     },
@@ -24,6 +29,10 @@
         "data": {
           "name": "Display name (optional)",
           "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "name": "Name for the fund's device and sensor. Leave empty to use the fund name from Zwitserleven.",
+          "scan_interval": "How often to check the Zwitserleven website. Prices change once a day, so an hour is plenty."
         }
       }
     }
