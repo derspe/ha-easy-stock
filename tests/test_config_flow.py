@@ -1,11 +1,11 @@
-"""Unit tests for EasyStockConfigFlow and EasyStockOptionsFlow."""
+"""Unit tests for ZwitserleverConfigFlow and ZwitserleverOptionsFlow."""
 from unittest.mock import patch
 
 import pytest
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.easy_stock.const import (
+from custom_components.zwitserleven_fondsen.const import (
     DOMAIN,
     CONF_SYMBOL,
     CONF_NAME,
@@ -16,8 +16,8 @@ from custom_components.easy_stock.const import (
 
 # Patch out the actual HA setup so no coordinator/network calls are made
 _SETUP_PATCHES = (
-    patch("custom_components.easy_stock.async_setup", return_value=True),
-    patch("custom_components.easy_stock.async_setup_entry", return_value=True),
+    patch("custom_components.zwitserleven_fondsen.async_setup", return_value=True),
+    patch("custom_components.zwitserleven_fondsen.async_setup_entry", return_value=True),
 )
 
 

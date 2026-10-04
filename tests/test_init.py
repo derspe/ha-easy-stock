@@ -1,18 +1,18 @@
-"""Unit tests for custom_components/easy_stock/__init__.py."""
+"""Unit tests for custom_components/zwitserleven_fondsen/__init__.py."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.easy_stock import (
+from custom_components.zwitserleven_fondsen import (
     async_remove_entry,
     async_setup,
     async_setup_entry,
     async_unload_entry,
 )
-from custom_components.easy_stock.const import DOMAIN
-from custom_components.easy_stock.frontend import CARD_URL_BASE, DATA_FRONTEND
+from custom_components.zwitserleven_fondsen.const import DOMAIN
+from custom_components.zwitserleven_fondsen.frontend import CARD_URL_BASE, DATA_FRONTEND
 
 
 async def _setup_storage_mode(hass):
@@ -29,7 +29,7 @@ def _card_items(resources):
 def _mock_coordinator():
     """Patch out the network-backed coordinator async_setup_entry builds."""
     return patch(
-        "custom_components.easy_stock.StockDataCoordinator",
+        "custom_components.zwitserleven_fondsen.ZwitserleverDataCoordinator",
         MagicMock(return_value=AsyncMock()),
     )
 
@@ -82,7 +82,7 @@ async def test_setup_survives_a_failing_card_registration(hass):
     assert await async_setup_component(hass, "http", {})
 
     with patch(
-        "custom_components.easy_stock.async_register_card",
+        "custom_components.zwitserleven_fondsen.async_register_card",
         side_effect=OSError("truncated download"),
     ):
         assert await async_setup(hass, {}) is True
@@ -135,7 +135,7 @@ async def test_entry_setup_does_not_re_register_an_existing_card(hass):
     entry.add_to_hass(hass)
     with _mock_coordinator(), patch.object(
         hass.config_entries, "async_forward_entry_setups", return_value=None
-    ), patch("custom_components.easy_stock.async_register_card") as mock_register:
+    ), patch("custom_components.zwitserleven_fondsen.async_register_card") as mock_register:
         assert await async_setup_entry(hass, entry) is True
 
     assert mock_register.call_count == 0

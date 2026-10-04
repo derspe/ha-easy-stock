@@ -6,7 +6,7 @@ from unittest.mock import patch
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.setup import async_setup_component
 
-from custom_components.easy_stock.frontend import (
+from custom_components.zwitserleven_fondsen.frontend import (
     CARD_URL_BASE,
     DATA_FRONTEND,
     async_register_card,
@@ -29,7 +29,7 @@ def _our_log(caplog):
     return "\n".join(
         r.getMessage()
         for r in caplog.records
-        if r.name == "custom_components.easy_stock.frontend"
+        if r.name == "custom_components.zwitserleven_fondsen.frontend"
     )
 
 
@@ -115,7 +115,7 @@ async def test_yaml_resource_mode_falls_back_to_extra_js(hass, caplog):
     )
 
     with caplog.at_level(logging.INFO), patch(
-        "custom_components.easy_stock.frontend.add_extra_js_url"
+        "custom_components.zwitserleven_fondsen.frontend.add_extra_js_url"
     ) as mock_add:
         await async_register_card(hass)
 
@@ -131,7 +131,7 @@ async def test_missing_lovelace_falls_back_to_extra_js(hass, caplog):
     assert await async_setup_component(hass, "http", {})
 
     with caplog.at_level(logging.INFO), patch(
-        "custom_components.easy_stock.frontend.add_extra_js_url"
+        "custom_components.zwitserleven_fondsen.frontend.add_extra_js_url"
     ) as mock_add:
         await async_register_card(hass)
 
@@ -161,7 +161,7 @@ async def test_legacy_mode_attribute_is_honoured(hass, caplog):
     hass.data[LOVELACE_DATA] = SimpleNamespace(mode="storage", resources=resources)
 
     with caplog.at_level(logging.INFO), patch(
-        "custom_components.easy_stock.frontend.add_extra_js_url"
+        "custom_components.zwitserleven_fondsen.frontend.add_extra_js_url"
     ) as mock_add:
         await async_register_card(hass)
 
@@ -176,7 +176,7 @@ async def test_legacy_yaml_mode_falls_back_to_extra_js(hass):
     hass.data[LOVELACE_DATA] = SimpleNamespace(mode="yaml", resources=resources)
 
     with patch(
-        "custom_components.easy_stock.frontend.add_extra_js_url"
+        "custom_components.zwitserleven_fondsen.frontend.add_extra_js_url"
     ) as mock_add:
         await async_register_card(hass)
 
@@ -189,7 +189,7 @@ async def test_legacy_dict_lovelace_data_is_honoured(hass):
     hass.data[LOVELACE_DATA] = {"mode": "storage", "resources": resources}
 
     with patch(
-        "custom_components.easy_stock.frontend.add_extra_js_url"
+        "custom_components.zwitserleven_fondsen.frontend.add_extra_js_url"
     ) as mock_add:
         await async_register_card(hass)
 
@@ -204,7 +204,7 @@ async def test_unknown_resource_mode_warns_and_falls_back(hass, caplog):
     hass.data[LOVELACE_DATA] = SimpleNamespace(resources=resources)
 
     with caplog.at_level(logging.WARNING), patch(
-        "custom_components.easy_stock.frontend.add_extra_js_url"
+        "custom_components.zwitserleven_fondsen.frontend.add_extra_js_url"
     ) as mock_add:
         await async_register_card(hass)
 
@@ -217,7 +217,7 @@ async def test_missing_frontend_does_not_raise(hass):
     assert await async_setup_component(hass, "http", {})
 
     with patch(
-        "custom_components.easy_stock.frontend.add_extra_js_url",
+        "custom_components.zwitserleven_fondsen.frontend.add_extra_js_url",
         side_effect=KeyError("frontend_extra_module_url"),
     ):
         await async_register_card(hass)  # must not raise
@@ -227,11 +227,11 @@ async def test_unregister_missing_frontend_does_not_raise(hass):
     """An exception from remove_extra_js_url during unregister must not propagate."""
     assert await async_setup_component(hass, "http", {})
 
-    with patch("custom_components.easy_stock.frontend.add_extra_js_url"):
+    with patch("custom_components.zwitserleven_fondsen.frontend.add_extra_js_url"):
         await async_register_card(hass)
 
     with patch(
-        "custom_components.easy_stock.frontend.remove_extra_js_url",
+        "custom_components.zwitserleven_fondsen.frontend.remove_extra_js_url",
         side_effect=KeyError("frontend_extra_module_url"),
     ):
         await async_unregister_card(hass)  # must not raise
@@ -275,15 +275,15 @@ async def test_removing_one_of_several_keeps_the_resource(hass):
     """
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-    from custom_components.easy_stock import async_remove_entry
-    from custom_components.easy_stock.const import DOMAIN as EASY_STOCK
+    from custom_components.zwitserleven_fondsen import async_remove_entry
+    from custom_components.zwitserleven_fondsen.const import DOMAIN as ZWITSERLEVEN
 
     resources = await _setup_storage_mode(hass)
     await async_register_card(hass)
 
-    remaining = MockConfigEntry(domain=EASY_STOCK, data={"symbol": "AAPL"})
+    remaining = MockConfigEntry(domain=ZWITSERLEVEN, data={"symbol": "AAPL"})
     remaining.add_to_hass(hass)
-    removed = MockConfigEntry(domain=EASY_STOCK, data={"symbol": "MSFT"})
+    removed = MockConfigEntry(domain=ZWITSERLEVEN, data={"symbol": "MSFT"})
 
     await async_remove_entry(hass, removed)
 
@@ -295,13 +295,13 @@ async def test_removing_the_last_entry_drops_the_resource(hass):
     """With no entries left in the registry, the resource is deleted."""
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-    from custom_components.easy_stock import async_remove_entry
-    from custom_components.easy_stock.const import DOMAIN as EASY_STOCK
+    from custom_components.zwitserleven_fondsen import async_remove_entry
+    from custom_components.zwitserleven_fondsen.const import DOMAIN as ZWITSERLEVEN
 
     resources = await _setup_storage_mode(hass)
     await async_register_card(hass)
 
-    removed = MockConfigEntry(domain=EASY_STOCK, data={"symbol": "AAPL"})
+    removed = MockConfigEntry(domain=ZWITSERLEVEN, data={"symbol": "AAPL"})
 
     await async_remove_entry(hass, removed)
 

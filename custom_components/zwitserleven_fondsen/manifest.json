@@ -1,6 +1,6 @@
 {
-  "domain": "easy_stock",
-  "name": "Easy Stock",
+  "domain": "zwitserleven_fondsen",
+  "name": "Zwitserleven Fondsen",
   "after_dependencies": [
     "frontend"
   ],
@@ -15,6 +15,8 @@
   "documentation": "https://github.com/derspe/ha-easy-stock",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/derspe/ha-easy-stock/issues",
-  "requirements": [],
-  "version": "0.5.1"
+  "requirements": [
+    "beautifulsoup4>=4.9.0"
+  ],
+  "version": "0.6.0"
 }

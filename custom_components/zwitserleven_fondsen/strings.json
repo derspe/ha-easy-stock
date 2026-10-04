@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Fonds",
+        "description": "Enter the Zwitserleven fonds button ID (e.g. LTAAF, LTAOB, LTAMI)",
+        "data": {
+          "symbol": "Fonds Button ID",
+          "name": "Display name (optional)",
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This fonds is already configured."
+    }
+  }
+}

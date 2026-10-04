@@ -27,10 +27,3 @@ def price_decimals(value: float, digits: int = PRICE_SIGNIFICANT_DIGITS) -> int:
     if not value or not math.isfinite(value):
         return digits
     return max(0, digits - 1 - math.floor(math.log10(abs(value))))
-
-
-def round_price(value: float, digits: int = PRICE_SIGNIFICANT_DIGITS) -> float:
-    """Round `value` to `digits` significant figures, passing 0 and NaN through."""
-    if not value or not math.isfinite(value):
-        return value
-    return round(value, price_decimals(value, digits))

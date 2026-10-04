@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, CONF_SYMBOL, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-from .coordinator import StockDataCoordinator
+from .coordinator import ZwitserleverDataCoordinator
 from .frontend import (
     CARD_URL_BASE,
     DATA_FRONTEND,
@@ -19,11 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 
-class EasyStockHistoryView(HomeAssistantView):
-    """REST endpoint: GET /api/easy_stock/history?symbol=AAPL"""
+class ZwitserleverHistoryView(HomeAssistantView):
+    """REST endpoint: GET /api/zwitserleven_fondsen/history?symbol=LTAAF"""  
 
-    url = "/api/easy_stock/history"
-    name = "api:easy_stock:history"
+    url = "/api/zwitserleven_fondsen/history"
+    name = "api:zwitserleven_fondsen:history"
     requires_auth = True
 
     async def get(self, request):
@@ -67,7 +67,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Register the card, the shared data store and the history endpoint."""
     await _async_register_card_safely(hass)
     hass.data.setdefault(DOMAIN, {})
-    hass.http.register_view(EasyStockHistoryView())
+    hass.http.register_view(ZwitserleverHistoryView())
     return True
 
 
@@ -90,8 +90,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scan_interval = entry.options.get(
         CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     )
-    store = Store(hass, version=1, key=f"easy_stock.{symbol.lower()}.history")
-    coordinator = StockDataCoordinator(
+    store = Store(hass, version=1, key=f"zwitserleven_fondsen.{symbol.lower()}.history")
+    coordinator = ZwitserleverDataCoordinator(
         hass,
         symbol=symbol,
         update_interval=scan_interval,
