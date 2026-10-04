@@ -6,7 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, CONF_SYMBOL, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-from .coordinator import ZwitserleverDataCoordinator
+from .coordinator import ZwitserlevenDataCoordinator
+from .fondsen_page import get_page
 from .frontend import (
     CARD_URL_BASE,
     DATA_FRONTEND,
@@ -19,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 
-class ZwitserleverHistoryView(HomeAssistantView):
-    """REST endpoint: GET /api/zwitserleven_fondsen/history?symbol=LTAAF"""  
+class ZwitserlevenHistoryView(HomeAssistantView):
+    """REST endpoint: GET /api/zwitserleven_fondsen/history?symbol=LTAAF"""
 
     url = "/api/zwitserleven_fondsen/history"
     name = "api:zwitserleven_fondsen:history"
@@ -47,14 +48,14 @@ async def _async_register_card_safely(hass: HomeAssistant) -> None:
     enters hass.config.components and *every* config entry fails, so a
     frontend detail would cost the user all of their sensors. Card
     registration reads and validates the Lovelace resource store, writes to
-    it, and hashes a file that a truncated HACS download can leave missing --
+    it, and hashes a file that a truncated download can leave missing --
     plenty of ways to raise for something the sensors do not depend on.
     """
     try:
         await async_register_card(hass)
     except Exception:  # noqa: BLE001 - deliberately broad, see docstring
         _LOGGER.exception(
-            "Easy Stock could not register its Lovelace card. Your sensors are "
+            "Zwitserleven Fondsen could not register its Lovelace card. Your sensors are "
             "unaffected and keep updating normally; only the custom card may "
             "be missing from dashboards. As a workaround, add %s as a "
             "dashboard resource of type 'module' under Settings > Dashboards > "
@@ -67,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Register the card, the shared data store and the history endpoint."""
     await _async_register_card_safely(hass)
     hass.data.setdefault(DOMAIN, {})
-    hass.http.register_view(ZwitserleverHistoryView())
+    hass.http.register_view(ZwitserlevenHistoryView())
     return True
 
 
@@ -91,11 +92,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     )
     store = Store(hass, version=1, key=f"zwitserleven_fondsen.{symbol.lower()}.history")
-    coordinator = ZwitserleverDataCoordinator(
+    coordinator = ZwitserlevenDataCoordinator(
         hass,
         symbol=symbol,
         update_interval=scan_interval,
         store=store,
+        page=get_page(hass),
     )
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator

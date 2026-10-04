@@ -1,9 +1,10 @@
-"""Unit tests for ZwitserleverConfigFlow and ZwitserleverOptionsFlow."""
+"""Unit tests for ZwitserlevenConfigFlow and ZwitserlevenOptionsFlow."""
 from unittest.mock import patch
 
 import pytest
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.zwitserleven_fondsen.const import (
     DOMAIN,
@@ -12,13 +13,31 @@ from custom_components.zwitserleven_fondsen.const import (
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
 )
+from custom_components.zwitserleven_fondsen.fondsen_page import FondsenPageError
+
+from .conftest import make_page, quote
+
+AANDELEN = quote(symbol="LTAAF", name="ASN Duurzaam Aandelenfonds")
+OBLIGATIES = quote(symbol="LTAOB", name="ASN Duurzaam Obligatiefonds", price=24.56)
+MILIEU = quote(symbol="LTAMI", name="ASN Milieu & Waterfonds", price=30.12)
 
 
-# Patch out the actual HA setup so no coordinator/network calls are made
-_SETUP_PATCHES = (
-    patch("custom_components.zwitserleven_fondsen.async_setup", return_value=True),
-    patch("custom_components.zwitserleven_fondsen.async_setup_entry", return_value=True),
-)
+@pytest.fixture(autouse=True)
+def no_setup():
+    """Patch out the actual HA setup so no coordinator/network calls are made."""
+    with patch(
+        "custom_components.zwitserleven_fondsen.async_setup", return_value=True
+    ), patch(
+        "custom_components.zwitserleven_fondsen.async_setup_entry", return_value=True
+    ):
+        yield
+
+
+def _serve(*quotes, error=None):
+    return patch(
+        "custom_components.zwitserleven_fondsen.config_flow.get_page",
+        return_value=make_page(*quotes, error=error),
+    )
 
 
 async def _init_flow(hass):
@@ -27,59 +46,90 @@ async def _init_flow(hass):
     )
 
 
+def _fund_options(result):
+    selector = result["data_schema"].schema[CONF_SYMBOL]
+    return selector.config["options"]
+
+
 # ---------------------------------------------------------------------------
 # Config flow
 # ---------------------------------------------------------------------------
 
 
-async def test_user_step_shows_form(hass):
-    """Initial step returns a form."""
-    result = await _init_flow(hass)
+async def test_user_step_offers_every_fund_sorted_by_name(hass):
+    with _serve(OBLIGATIES, MILIEU, AANDELEN):
+        result = await _init_flow(hass)
+
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert _fund_options(result) == [
+        {"value": "LTAAF", "label": "ASN Duurzaam Aandelenfonds (LTAAF)"},
+        {"value": "LTAOB", "label": "ASN Duurzaam Obligatiefonds (LTAOB)"},
+        {"value": "LTAMI", "label": "ASN Milieu & Waterfonds (LTAMI)"},
+    ]
 
 
 async def test_config_flow_creates_entry(hass):
-    """Submitting valid data creates a config entry."""
-    result = await _init_flow(hass)
-
-    with _SETUP_PATCHES[0], _SETUP_PATCHES[1]:
+    with _serve(AANDELEN, OBLIGATIES):
+        result = await _init_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_SYMBOL: "AAPL", CONF_NAME: "Apple", CONF_SCAN_INTERVAL: 900},
+            {CONF_SYMBOL: "LTAAF", CONF_NAME: "Aandelen", CONF_SCAN_INTERVAL: 900},
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_SYMBOL] == "AAPL"
-    assert result["data"][CONF_NAME] == "Apple"
+    assert result["title"] == "Aandelen"
+    assert result["data"][CONF_SYMBOL] == "LTAAF"
+    assert result["data"][CONF_NAME] == "Aandelen"
     assert result["data"][CONF_SCAN_INTERVAL] == 900
 
 
-async def test_symbol_normalized_to_uppercase(hass):
-    """Lowercase ticker input is stored as uppercase."""
-    result = await _init_flow(hass)
-
-    with _SETUP_PATCHES[0], _SETUP_PATCHES[1]:
+async def test_title_defaults_to_the_fund_name(hass):
+    with _serve(AANDELEN):
+        result = await _init_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_SYMBOL: "aapl", CONF_NAME: "", CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+            {CONF_SYMBOL: "LTAAF", CONF_NAME: "", CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
         )
 
-    assert result["data"][CONF_SYMBOL] == "AAPL"
+    assert result["title"] == "ASN Duurzaam Aandelenfonds"
 
 
-async def test_duplicate_symbol_aborts(hass):
-    """Configuring the same symbol twice triggers an abort."""
-    for _ in range(2):
+async def test_unknown_fund_is_rejected(hass):
+    with _serve(AANDELEN):
         result = await _init_flow(hass)
-        with _SETUP_PATCHES[0], _SETUP_PATCHES[1]:
-            result = await hass.config_entries.flow.async_configure(
+        with pytest.raises(InvalidData):
+            await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                {CONF_SYMBOL: "TSLA", CONF_NAME: "", CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+                {CONF_SYMBOL: "NOPE", CONF_NAME: "", CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
             )
 
+
+async def test_configured_funds_are_not_offered_again(hass):
+    MockConfigEntry(domain=DOMAIN, data={CONF_SYMBOL: "LTAAF"}).add_to_hass(hass)
+
+    with _serve(AANDELEN, OBLIGATIES):
+        result = await _init_flow(hass)
+
+    assert [o["value"] for o in _fund_options(result)] == ["LTAOB"]
+
+
+async def test_aborts_when_every_fund_is_configured(hass):
+    MockConfigEntry(domain=DOMAIN, data={CONF_SYMBOL: "LTAAF"}).add_to_hass(hass)
+
+    with _serve(AANDELEN):
+        result = await _init_flow(hass)
+
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "no_funds_left"
+
+
+async def test_aborts_when_the_fund_list_cannot_be_loaded(hass):
+    with _serve(error=FondsenPageError("Zwitserleven returned HTTP 503")):
+        result = await _init_flow(hass)
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 # ---------------------------------------------------------------------------
@@ -89,11 +139,9 @@ async def test_duplicate_symbol_aborts(hass):
 
 async def test_options_flow_shows_form(hass):
     """Options flow init step shows a form pre-filled with current values."""
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
-
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SYMBOL: "MSFT", CONF_NAME: "Microsoft", CONF_SCAN_INTERVAL: 900},
+        data={CONF_SYMBOL: "LTAOB", CONF_NAME: "Obligaties", CONF_SCAN_INTERVAL: 900},
         options={},
     )
     entry.add_to_hass(hass)
@@ -105,11 +153,9 @@ async def test_options_flow_shows_form(hass):
 
 async def test_options_flow_saves_new_values(hass):
     """Submitting options form saves updated name and interval."""
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
-
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SYMBOL: "MSFT", CONF_NAME: "Microsoft", CONF_SCAN_INTERVAL: 900},
+        data={CONF_SYMBOL: "LTAOB", CONF_NAME: "Obligaties", CONF_SCAN_INTERVAL: 900},
         options={},
     )
     entry.add_to_hass(hass)
@@ -117,9 +163,9 @@ async def test_options_flow_saves_new_values(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {CONF_NAME: "MSFT Stock", CONF_SCAN_INTERVAL: 1800},
+        {CONF_NAME: "Obligatiefonds", CONF_SCAN_INTERVAL: 1800},
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_NAME] == "MSFT Stock"
+    assert entry.options[CONF_NAME] == "Obligatiefonds"
     assert entry.options[CONF_SCAN_INTERVAL] == 1800

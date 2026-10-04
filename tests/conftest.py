@@ -1,8 +1,10 @@
 """Shared fixtures for zwitserleven_fondsen tests."""
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from pathlib import Path
+from unittest.mock import AsyncMock
 
 import pytest
+
+from custom_components.zwitserleven_fondsen.fondsen_page import FundQuote
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -13,36 +15,12 @@ def auto_enable_custom_integrations(enable_custom_integrations):
     return
 
 
+# A saved copy of the real fund overview page (prices dated 02-10-2026).
+FONDSEN_HTML = (Path(__file__).parent / "fixtures" / "fondsen.html").read_text(
+    encoding="utf-8"
+)
+
 SYMBOL = "LTAAF"
-
-# Five consecutive trading days, safely in the past
-SAMPLE_DAYS = [
-    ("2024-01-02", 225.87),
-    ("2024-01-03", 224.10),
-    ("2024-01-04", 226.50),
-    ("2024-01-05", 228.00),
-    ("2024-01-08", 229.30),
-]
-
-
-def make_zwitserleven_html():
-    """Build a minimal Zwitserleven fondsen HTML response with fund table."""
-    html = f"""
-    <html>
-    <body>
-        <table class="fundoverview">
-            <tr class="fundoverview__item">
-                <td>
-                    <button id="{SYMBOL}">Test Fund</button>
-                </td>
-                <td>02-01-2024</td>
-                <td>€ 225,87</td>
-            </tr>
-        </table>
-    </body>
-    </html>
-    """
-    return html
 
 
 def make_store(history=None):
@@ -52,17 +30,15 @@ def make_store(history=None):
     return store
 
 
-def mock_http(html_or_json, status=200):
-    """Return a context manager that patches aiohttp.ClientSession."""
-    mock_resp = AsyncMock()
-    mock_resp.status = status
-    mock_resp.text = AsyncMock(return_value=html_or_json)
-    mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
-    mock_resp.__aexit__ = AsyncMock(return_value=False)
+def make_page(*quotes, error=None):
+    """Return a mocked FondsenPage serving `quotes`, or raising `error`."""
+    page = AsyncMock()
+    if error is not None:
+        page.async_get_funds.side_effect = error
+    else:
+        page.async_get_funds.return_value = {q.symbol: q for q in quotes}
+    return page
 
-    mock_session = MagicMock()
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=False)
-    mock_session.get.return_value = mock_resp
 
-    return patch("aiohttp.ClientSession", MagicMock(return_value=mock_session)), mock_session
+def quote(date="2026-10-02", price=225.87, symbol=SYMBOL, name="ASN Duurzaam Aandelenfonds"):
+    return FundQuote(symbol=symbol, name=name, price_date=date, price=price)

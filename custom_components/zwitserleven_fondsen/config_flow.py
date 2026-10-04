@@ -1,28 +1,39 @@
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import DOMAIN, CONF_SYMBOL, CONF_NAME, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+from .fondsen_page import FondsenPageError, get_page
 
 
-class ZwitserleverConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ZwitserlevenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return ZwitserleverOptionsFlow(config_entry)
+        return ZwitserlevenOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input: dict | None = None):
-        errors = {}
+        try:
+            funds = await get_page(self.hass).async_get_funds()
+        except FondsenPageError:
+            return self.async_abort(reason="cannot_connect")
 
         if user_input is not None:
-            symbol = user_input[CONF_SYMBOL].upper().strip()
+            symbol = user_input[CONF_SYMBOL]
             await self.async_set_unique_id(f"zwitserleven_fondsen_{symbol}")
             self._abort_if_unique_id_configured()
 
+            fund = funds.get(symbol)
             return self.async_create_entry(
-                title=user_input.get(CONF_NAME) or symbol,
+                title=user_input.get(CONF_NAME) or (fund.name if fund else symbol),
                 data={
                     CONF_SYMBOL: symbol,
                     CONF_NAME: user_input.get(CONF_NAME, ""),
@@ -30,9 +41,20 @@ class ZwitserleverConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        configured = {entry.data[CONF_SYMBOL] for entry in self._async_current_entries()}
+        options = [
+            SelectOptionDict(value=fund.symbol, label=f"{fund.name} ({fund.symbol})")
+            for fund in sorted(funds.values(), key=lambda f: f.name.casefold())
+            if fund.symbol not in configured
+        ]
+        if not options:
+            return self.async_abort(reason="no_funds_left")
+
         schema = vol.Schema(
             {
-                vol.Required(CONF_SYMBOL): str,
+                vol.Required(CONF_SYMBOL): SelectSelector(
+                    SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
+                ),
                 vol.Optional(CONF_NAME, default=""): str,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
                     int, vol.Range(min=60, max=86400)
@@ -40,10 +62,10 @@ class ZwitserleverConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(step_id="user", data_schema=schema)
 
 
-class ZwitserleverOptionsFlow(config_entries.OptionsFlow):
+class ZwitserlevenOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         self._config_entry = config_entry

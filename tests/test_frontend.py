@@ -281,9 +281,9 @@ async def test_removing_one_of_several_keeps_the_resource(hass):
     resources = await _setup_storage_mode(hass)
     await async_register_card(hass)
 
-    remaining = MockConfigEntry(domain=ZWITSERLEVEN, data={"symbol": "AAPL"})
+    remaining = MockConfigEntry(domain=ZWITSERLEVEN, data={"symbol": "LTAAF"})
     remaining.add_to_hass(hass)
-    removed = MockConfigEntry(domain=ZWITSERLEVEN, data={"symbol": "MSFT"})
+    removed = MockConfigEntry(domain=ZWITSERLEVEN, data={"symbol": "LTAOB"})
 
     await async_remove_entry(hass, removed)
 
@@ -301,7 +301,7 @@ async def test_removing_the_last_entry_drops_the_resource(hass):
     resources = await _setup_storage_mode(hass)
     await async_register_card(hass)
 
-    removed = MockConfigEntry(domain=ZWITSERLEVEN, data={"symbol": "AAPL"})
+    removed = MockConfigEntry(domain=ZWITSERLEVEN, data={"symbol": "LTAAF"})
 
     await async_remove_entry(hass, removed)
 

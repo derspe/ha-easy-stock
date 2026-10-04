@@ -43,7 +43,7 @@ jobs:
         run: npm run build
 
       - name: Fail if the committed bundle is stale
-        run: git diff --exit-code custom_components/easy_stock/www/
+        run: git diff --exit-code custom_components/zwitserleven_fondsen/www/
 
       - name: Run vitest
         run: npm test

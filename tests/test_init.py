@@ -29,7 +29,7 @@ def _card_items(resources):
 def _mock_coordinator():
     """Patch out the network-backed coordinator async_setup_entry builds."""
     return patch(
-        "custom_components.zwitserleven_fondsen.ZwitserleverDataCoordinator",
+        "custom_components.zwitserleven_fondsen.ZwitserlevenDataCoordinator",
         MagicMock(return_value=AsyncMock()),
     )
 
@@ -44,7 +44,7 @@ async def test_unload_entry_without_stored_data_succeeds(hass):
     KeyError (silently swallowed by Home Assistant, but reported as an
     unload failure rather than a success).
     """
-    entry = MockConfigEntry(domain=DOMAIN, data={"symbol": "AAPL"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"symbol": "LTAAF"})
     entry.add_to_hass(hass)
     hass.data.setdefault(DOMAIN, {})
 
@@ -105,12 +105,12 @@ async def test_re_adding_an_entry_restores_the_card_without_a_restart(hass):
 
     # HA deletes the entry from the registry before calling async_remove_entry,
     # so the entry being removed is deliberately never added to hass.
-    await async_remove_entry(hass, MockConfigEntry(domain=DOMAIN, data={"symbol": "AAPL"}))
+    await async_remove_entry(hass, MockConfigEntry(domain=DOMAIN, data={"symbol": "LTAAF"}))
     await resources.async_get_info()
     assert _card_items(resources) == []
     assert DATA_FRONTEND not in hass.data
 
-    entry = MockConfigEntry(domain=DOMAIN, data={"symbol": "MSFT"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"symbol": "LTAOB"})
     entry.add_to_hass(hass)
     with _mock_coordinator(), patch.object(
         hass.config_entries, "async_forward_entry_setups", return_value=None
@@ -131,7 +131,7 @@ async def test_entry_setup_does_not_re_register_an_existing_card(hass):
     await _setup_storage_mode(hass)
     assert await async_setup(hass, {}) is True
 
-    entry = MockConfigEntry(domain=DOMAIN, data={"symbol": "MSFT"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"symbol": "LTAOB"})
     entry.add_to_hass(hass)
     with _mock_coordinator(), patch.object(
         hass.config_entries, "async_forward_entry_setups", return_value=None

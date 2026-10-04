@@ -2,17 +2,30 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add Stock",
-        "description": "Enter the Yahoo Finance symbol (e.g. SAP.DE, AAPL, BTC-USD)",
+        "title": "Add fund",
+        "description": "Choose the Zwitserleven fund to track.",
         "data": {
-          "symbol": "Symbol",
+          "symbol": "Fund",
           "name": "Display name (optional)",
           "scan_interval": "Update interval (seconds)"
         }
       }
     },
     "abort": {
-      "already_configured": "This symbol is already configured."
+      "already_configured": "This fund is already configured.",
+      "cannot_connect": "Could not load the fund list from the Zwitserleven website. Try again later.",
+      "no_funds_left": "Every Zwitserleven fund is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Fund options",
+        "data": {
+          "name": "Display name (optional)",
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
     }
   }
 }

@@ -11,7 +11,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // dirname()/join() avoids that transform.
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
-const BUNDLE = join(ROOT, "custom_components/easy_stock/www/easy-stock-card.js");
+const BUNDLE = join(ROOT, "custom_components/zwitserleven_fondsen/www/zwitserleven-fondsen-card.js");
 
 // NOTE: deliberately not os.tmpdir() either. Under Vitest's jsdom environment,
 // dynamic import() is resolved through Vite's dev-server module graph, which
@@ -90,8 +90,8 @@ describe("card registration", () => {
 
   it("defines the card and its editor", async () => {
     await import(/* @vite-ignore */ firstUrl);
-    expect(customElements.get("easy-stock-card")).toBeTruthy();
-    expect(customElements.get("easy-stock-card-editor")).toBeTruthy();
+    expect(customElements.get("zwitserleven-fondsen-card")).toBeTruthy();
+    expect(customElements.get("zwitserleven-fondsen-card-editor")).toBeTruthy();
   });
 
   it("survives a second evaluation without throwing", async () => {
@@ -103,7 +103,7 @@ describe("card registration", () => {
     // Before the define guards existed, a second evaluation threw
     // NotSupportedError — ugly, but loud. The guards made it a silent no-op,
     // which means a user running a stale duplicate copy of the card (say a
-    // leftover /local/easy-stock-card.js resource) gets the *old* card with no
+    // leftover /local/zwitserleven-fondsen-card.js resource) gets the *old* card with no
     // evidence anywhere. The warning is that evidence.
     //
     // `duplicateUrl` is imported nowhere else, so this is always its first
@@ -112,8 +112,8 @@ describe("card registration", () => {
     await import(/* @vite-ignore */ firstUrl);
     await import(/* @vite-ignore */ duplicateUrl);
 
-    expect(warned.some((m) => m.includes("<easy-stock-card>"))).toBe(true);
-    expect(warned.some((m) => m.includes("<easy-stock-card-editor>"))).toBe(
+    expect(warned.some((m) => m.includes("<zwitserleven-fondsen-card>"))).toBe(true);
+    expect(warned.some((m) => m.includes("<zwitserleven-fondsen-card-editor>"))).toBe(
       true,
     );
     // The message has to name the copy that was ignored, so the duplicate can
@@ -126,7 +126,7 @@ describe("card registration", () => {
     // rather than having been cached by an earlier test.
     await import(/* @vite-ignore */ bannerUrl);
 
-    const line = informed.find((m) => m.includes("[easy-stock-card]"));
+    const line = informed.find((m) => m.includes("[zwitserleven-fondsen-card]"));
     expect(line).toBeDefined();
     // In production the URL carries the ?v=<md5> cache-buster the integration
     // appends, so this identifies the exact bundle the browser loaded.
@@ -138,6 +138,6 @@ describe("card registration", () => {
     await import(/* @vite-ignore */ firstUrl);
     await import(/* @vite-ignore */ secondUrl);
     const cards = ((window as any).customCards ?? []) as Array<{ type: string }>;
-    expect(cards.filter((c) => c.type === "easy-stock-card")).toHaveLength(1);
+    expect(cards.filter((c) => c.type === "zwitserleven-fondsen-card")).toHaveLength(1);
   });
 });

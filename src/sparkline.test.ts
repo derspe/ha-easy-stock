@@ -20,9 +20,8 @@ const SATURDAY = new Date(2026, 7, 29, 20, 0, 0);
 
 describe("sparklinePoints", () => {
   it("draws rounding noise as a flat line instead of stretching it to full height", () => {
-    // The reported case: a CHF quote alternating between 14,399.77 and 14,399.80
-    // while the exchange is shut. That is 2 ppm — autoscaling on min/max turned it
-    // into a full-height sawtooth. See issue #17.
+    // A price alternating between 14,399.77 and 14,399.80 moves by 2 ppm;
+    // autoscaling on min/max turned it into a full-height sawtooth.
     const points = sparklinePoints(
       series(SATURDAY, [14399.77, 14399.8, 14399.77, 14399.8, 14399.77]),
       "1T",
@@ -71,9 +70,9 @@ describe("sparklinePoints", () => {
     expect(points.map((p) => p.x)).toEqual([LEFT, (LEFT + RIGHT) / 2, RIGHT]);
   });
 
-  it("spaces the closed-market placeholder evenly, since it carries no real timestamps", () => {
-    // _buildChartData emits [["prev", price], [today, price]] when the asset did not
-    // trade today; "prev" is not a timestamp, so the time axis must not be used.
+  it("spaces a series without real timestamps evenly", () => {
+    // buildChartData can emit a ["prev", price] placeholder; it is not a
+    // timestamp, so the time axis must not be used.
     const points = sparklinePoints([["prev", 100], ["2026-08-29", 100]], "1T", SATURDAY);
 
     expect(points.map((p) => p.x)).toEqual([LEFT, RIGHT]);

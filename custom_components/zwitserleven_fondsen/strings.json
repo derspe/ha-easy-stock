@@ -2,17 +2,30 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add Fonds",
-        "description": "Enter the Zwitserleven fonds button ID (e.g. LTAAF, LTAOB, LTAMI)",
+        "title": "Add fund",
+        "description": "Choose the Zwitserleven fund to track.",
         "data": {
-          "symbol": "Fonds Button ID",
+          "symbol": "Fund",
           "name": "Display name (optional)",
           "scan_interval": "Update interval (seconds)"
         }
       }
     },
     "abort": {
-      "already_configured": "This fonds is already configured."
+      "already_configured": "This fund is already configured.",
+      "cannot_connect": "Could not load the fund list from the Zwitserleven website. Try again later.",
+      "no_funds_left": "Every Zwitserleven fund is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Fund options",
+        "data": {
+          "name": "Display name (optional)",
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
     }
   }
 }

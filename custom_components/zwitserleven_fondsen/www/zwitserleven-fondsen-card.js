@@ -594,320 +594,260 @@ const translations = {
   en: {
     editor: {
       title_label: "Title (optional)",
-      display_currency: "Display currency",
-      default_display_currency: "Default display currency",
       default_range: "Default time range",
       tile_size: "Tile size",
       selected: "Selected",
       drag_hint: "drag to reorder",
       add: "Add",
-      no_sensors: "No Easy Stock sensors found.",
-      setup_hint: "Set up under Settings → Integrations → Easy Stock.",
-      currency_inherit: "Default"
+      no_sensors: "No Zwitserleven Fondsen sensors found.",
+      setup_hint: "Set up under Settings → Integrations → Zwitserleven Fondsen."
     },
     card: { not_found: "Not found" }
   },
   de: {
     editor: {
       title_label: "Titel (optional)",
-      display_currency: "Anzeigewährung",
-      default_display_currency: "Standard-Anzeigewährung",
       default_range: "Standard Zeitraum",
       tile_size: "Kachelgröße",
       selected: "Ausgewählt",
       drag_hint: "ziehen zum Sortieren",
       add: "Hinzufügen",
-      no_sensors: "Keine Easy Stock Sensoren gefunden.",
-      setup_hint: "Integration einrichten unter Einstellungen → Integrationen → Easy Stock.",
-      currency_inherit: "Standard"
+      no_sensors: "Keine Zwitserleven Fondsen Sensoren gefunden.",
+      setup_hint: "Integration einrichten unter Einstellungen → Integrationen → Zwitserleven Fondsen."
     },
     card: { not_found: "Nicht gefunden" }
   },
   fr: {
     editor: {
       title_label: "Titre (optionnel)",
-      display_currency: "Devise d'affichage",
-      default_display_currency: "Devise d'affichage par défaut",
       default_range: "Période par défaut",
       tile_size: "Taille des tuiles",
       selected: "Sélectionnés",
       drag_hint: "glisser pour réorganiser",
       add: "Ajouter",
-      no_sensors: "Aucun capteur Easy Stock trouvé.",
-      setup_hint: "Configurer sous Paramètres → Intégrations → Easy Stock.",
-      currency_inherit: "Par défaut"
+      no_sensors: "Aucun capteur Zwitserleven Fondsen trouvé.",
+      setup_hint: "Configurer sous Paramètres → Intégrations → Zwitserleven Fondsen."
     },
     card: { not_found: "Introuvable" }
   },
   nl: {
     editor: {
       title_label: "Titel (optioneel)",
-      display_currency: "Weergavevaluta",
-      default_display_currency: "Standaard weergavevaluta",
       default_range: "Standaard tijdsbereik",
       tile_size: "Tegelgrootte",
       selected: "Geselecteerd",
       drag_hint: "slepen om te sorteren",
       add: "Toevoegen",
-      no_sensors: "Geen Easy Stock-sensoren gevonden.",
-      setup_hint: "Instellen via Instellingen → Integraties → Easy Stock.",
-      currency_inherit: "Standaard"
+      no_sensors: "Geen Zwitserleven Fondsen-sensoren gevonden.",
+      setup_hint: "Instellen via Instellingen → Integraties → Zwitserleven Fondsen."
     },
     card: { not_found: "Niet gevonden" }
   },
   es: {
     editor: {
       title_label: "Título (opcional)",
-      display_currency: "Moneda de visualización",
-      default_display_currency: "Moneda de visualización predeterminada",
       default_range: "Rango de tiempo predeterminado",
       tile_size: "Tamaño de ficha",
       selected: "Seleccionados",
       drag_hint: "arrastrar para ordenar",
       add: "Añadir",
-      no_sensors: "No se encontraron sensores Easy Stock.",
-      setup_hint: "Configurar en Ajustes → Integraciones → Easy Stock.",
-      currency_inherit: "Predeterminada"
+      no_sensors: "No se encontraron sensores Zwitserleven Fondsen.",
+      setup_hint: "Configurar en Ajustes → Integraciones → Zwitserleven Fondsen."
     },
     card: { not_found: "No encontrado" }
   },
   it: {
     editor: {
       title_label: "Titolo (opzionale)",
-      display_currency: "Valuta di visualizzazione",
-      default_display_currency: "Valuta di visualizzazione predefinita",
       default_range: "Intervallo predefinito",
       tile_size: "Dimensione tessera",
       selected: "Selezionati",
       drag_hint: "trascina per riordinare",
       add: "Aggiungi",
-      no_sensors: "Nessun sensore Easy Stock trovato.",
-      setup_hint: "Configurare in Impostazioni → Integrazioni → Easy Stock.",
-      currency_inherit: "Predefinita"
+      no_sensors: "Nessun sensore Zwitserleven Fondsen trovato.",
+      setup_hint: "Configurare in Impostazioni → Integrazioni → Zwitserleven Fondsen."
     },
     card: { not_found: "Non trovato" }
   },
   pt: {
     editor: {
       title_label: "Título (opcional)",
-      display_currency: "Moeda de exibição",
-      default_display_currency: "Moeda de exibição padrão",
       default_range: "Intervalo padrão",
       tile_size: "Tamanho do bloco",
       selected: "Selecionados",
       drag_hint: "arrastar para reordenar",
       add: "Adicionar",
-      no_sensors: "Nenhum sensor Easy Stock encontrado.",
-      setup_hint: "Configurar em Definições → Integrações → Easy Stock.",
-      currency_inherit: "Padrão"
+      no_sensors: "Nenhum sensor Zwitserleven Fondsen encontrado.",
+      setup_hint: "Configurar em Definições → Integrações → Zwitserleven Fondsen."
     },
     card: { not_found: "Não encontrado" }
   },
   pl: {
     editor: {
       title_label: "Tytuł (opcjonalny)",
-      display_currency: "Waluta wyświetlania",
-      default_display_currency: "Domyślna waluta wyświetlania",
       default_range: "Domyślny zakres czasu",
       tile_size: "Rozmiar kafelka",
       selected: "Wybrane",
       drag_hint: "przeciągnij, aby zmienić kolejność",
       add: "Dodaj",
-      no_sensors: "Nie znaleziono czujników Easy Stock.",
-      setup_hint: "Skonfiguruj w Ustawienia → Integracje → Easy Stock.",
-      currency_inherit: "Domyślna"
+      no_sensors: "Nie znaleziono czujników Zwitserleven Fondsen.",
+      setup_hint: "Skonfiguruj w Ustawienia → Integracje → Zwitserleven Fondsen."
     },
     card: { not_found: "Nie znaleziono" }
   },
   sv: {
     editor: {
       title_label: "Titel (valfritt)",
-      display_currency: "Visningsvaluta",
-      default_display_currency: "Standardvisningsvaluta",
       default_range: "Standardtidsintervall",
       tile_size: "Kakelstorlek",
       selected: "Valda",
       drag_hint: "dra för att sortera",
       add: "Lägg till",
-      no_sensors: "Inga Easy Stock-sensorer hittades.",
-      setup_hint: "Konfigurera under Inställningar → Integrationer → Easy Stock.",
-      currency_inherit: "Standard"
+      no_sensors: "Inga Zwitserleven Fondsen-sensorer hittades.",
+      setup_hint: "Konfigurera under Inställningar → Integrationer → Zwitserleven Fondsen."
     },
     card: { not_found: "Hittades inte" }
   },
   da: {
     editor: {
       title_label: "Titel (valgfrit)",
-      display_currency: "Visningsvaluta",
-      default_display_currency: "Standardvisningsvaluta",
       default_range: "Standard tidsinterval",
       tile_size: "Flisestørrelse",
       selected: "Valgte",
       drag_hint: "træk for at sortere",
       add: "Tilføj",
-      no_sensors: "Ingen Easy Stock-sensorer fundet.",
-      setup_hint: "Opsæt under Indstillinger → Integrationer → Easy Stock.",
-      currency_inherit: "Standard"
+      no_sensors: "Ingen Zwitserleven Fondsen-sensorer fundet.",
+      setup_hint: "Opsæt under Indstillinger → Integrationer → Zwitserleven Fondsen."
     },
     card: { not_found: "Ikke fundet" }
   },
   nb: {
     editor: {
       title_label: "Tittel (valgfritt)",
-      display_currency: "Visningsvaluta",
-      default_display_currency: "Standard visningsvaluta",
       default_range: "Standard tidsintervall",
       tile_size: "Flisestørrelse",
       selected: "Valgte",
       drag_hint: "dra for å sortere",
       add: "Legg til",
-      no_sensors: "Ingen Easy Stock-sensorer funnet.",
-      setup_hint: "Konfigurer under Innstillinger → Integrasjoner → Easy Stock.",
-      currency_inherit: "Standard"
+      no_sensors: "Ingen Zwitserleven Fondsen-sensorer funnet.",
+      setup_hint: "Konfigurer under Innstillinger → Integrasjoner → Zwitserleven Fondsen."
     },
     card: { not_found: "Ikke funnet" }
   },
   fi: {
     editor: {
       title_label: "Otsikko (valinnainen)",
-      display_currency: "Näyttövaluutta",
-      default_display_currency: "Oletusnäyttövaluutta",
       default_range: "Oletusjaksovali",
       tile_size: "Ruudun koko",
       selected: "Valitut",
       drag_hint: "vedä järjestääksesi",
       add: "Lisää",
-      no_sensors: "Easy Stock -antureita ei löydy.",
-      setup_hint: "Määritä kohdassa Asetukset → Integraatiot → Easy Stock.",
-      currency_inherit: "Oletus"
+      no_sensors: "Zwitserleven Fondsen -antureita ei löydy.",
+      setup_hint: "Määritä kohdassa Asetukset → Integraatiot → Zwitserleven Fondsen."
     },
     card: { not_found: "Ei löydy" }
   },
   cs: {
     editor: {
       title_label: "Název (volitelný)",
-      display_currency: "Zobrazovaná měna",
-      default_display_currency: "Výchozí zobrazovaná měna",
       default_range: "Výchozí časový rozsah",
       tile_size: "Velikost dlaždice",
       selected: "Vybrané",
       drag_hint: "přetáhněte pro seřazení",
       add: "Přidat",
-      no_sensors: "Nebyly nalezeny žádné senzory Easy Stock.",
-      setup_hint: "Nastavte v Nastavení → Integrace → Easy Stock.",
-      currency_inherit: "Výchozí"
+      no_sensors: "Nebyly nalezeny žádné senzory Zwitserleven Fondsen.",
+      setup_hint: "Nastavte v Nastavení → Integrace → Zwitserleven Fondsen."
     },
     card: { not_found: "Nenalezeno" }
   },
   hu: {
     editor: {
       title_label: "Cím (opcionális)",
-      display_currency: "Megjelenítési pénznem",
-      default_display_currency: "Alapértelmezett megjelenítési pénznem",
       default_range: "Alapértelmezett időtartomány",
       tile_size: "Csempe mérete",
       selected: "Kiválasztottak",
       drag_hint: "húzza a rendezéshez",
       add: "Hozzáadás",
-      no_sensors: "Nem találhatók Easy Stock érzékelők.",
-      setup_hint: "Állítsa be a Beállítások → Integrációk → Easy Stock menüpontban.",
-      currency_inherit: "Alapértelmezett"
+      no_sensors: "Nem találhatók Zwitserleven Fondsen érzékelők.",
+      setup_hint: "Állítsa be a Beállítások → Integrációk → Zwitserleven Fondsen menüpontban."
     },
     card: { not_found: "Nem található" }
   },
   ru: {
     editor: {
       title_label: "Заголовок (необязательно)",
-      display_currency: "Валюта отображения",
-      default_display_currency: "Валюта отображения по умолчанию",
       default_range: "Временной диапазон по умолчанию",
       tile_size: "Размер плитки",
       selected: "Выбранные",
       drag_hint: "перетащите для сортировки",
       add: "Добавить",
-      no_sensors: "Датчики Easy Stock не найдены.",
-      setup_hint: "Настройте в Настройки → Интеграции → Easy Stock.",
-      currency_inherit: "По умолчанию"
+      no_sensors: "Датчики Zwitserleven Fondsen не найдены.",
+      setup_hint: "Настройте в Настройки → Интеграции → Zwitserleven Fondsen."
     },
     card: { not_found: "Не найдено" }
   },
   zh: {
     editor: {
       title_label: "标题（可选）",
-      display_currency: "显示货币",
-      default_display_currency: "默认显示货币",
       default_range: "默认时间范围",
       tile_size: "磁贴大小",
       selected: "已选择",
       drag_hint: "拖动以排序",
       add: "添加",
-      no_sensors: "未找到 Easy Stock 传感器。",
-      setup_hint: "在设置 → 集成 → Easy Stock 中进行配置。",
-      currency_inherit: "默认"
+      no_sensors: "未找到 Zwitserleven Fondsen 传感器。",
+      setup_hint: "在设置 → 集成 → Zwitserleven Fondsen 中进行配置。"
     },
     card: { not_found: "未找到" }
   },
   ja: {
     editor: {
       title_label: "タイトル（省略可）",
-      display_currency: "表示通貨",
-      default_display_currency: "デフォルト表示通貨",
       default_range: "デフォルト期間",
       tile_size: "タイルサイズ",
       selected: "選択済み",
       drag_hint: "ドラッグして並び替え",
       add: "追加",
-      no_sensors: "Easy Stock センサーが見つかりません。",
-      setup_hint: "設定 → インテグレーション → Easy Stock で設定してください。",
-      currency_inherit: "デフォルト"
+      no_sensors: "Zwitserleven Fondsen センサーが見つかりません。",
+      setup_hint: "設定 → インテグレーション → Zwitserleven Fondsen で設定してください。"
     },
     card: { not_found: "見つかりません" }
   },
   ko: {
     editor: {
       title_label: "제목 (선택사항)",
-      display_currency: "표시 통화",
-      default_display_currency: "기본 표시 통화",
       default_range: "기본 기간",
       tile_size: "타일 크기",
       selected: "선택됨",
       drag_hint: "드래그하여 정렬",
       add: "추가",
-      no_sensors: "Easy Stock 센서를 찾을 수 없습니다.",
-      setup_hint: "설정 → 통합 → Easy Stock에서 설정하세요.",
-      currency_inherit: "기본값"
+      no_sensors: "Zwitserleven Fondsen 센서를 찾을 수 없습니다.",
+      setup_hint: "설정 → 통합 → Zwitserleven Fondsen에서 설정하세요."
     },
     card: { not_found: "찾을 수 없음" }
   },
   tr: {
     editor: {
       title_label: "Başlık (isteğe bağlı)",
-      display_currency: "Görüntüleme para birimi",
-      default_display_currency: "Varsayılan görüntüleme para birimi",
       default_range: "Varsayılan zaman aralığı",
       tile_size: "Kutucuk boyutu",
       selected: "Seçilenler",
       drag_hint: "sıralamak için sürükle",
       add: "Ekle",
-      no_sensors: "Easy Stock sensörü bulunamadı.",
-      setup_hint: "Ayarlar → Entegrasyonlar → Easy Stock altında yapılandırın.",
-      currency_inherit: "Varsayılan"
+      no_sensors: "Zwitserleven Fondsen sensörü bulunamadı.",
+      setup_hint: "Ayarlar → Entegrasyonlar → Zwitserleven Fondsen altında yapılandırın."
     },
     card: { not_found: "Bulunamadı" }
   },
   ar: {
     editor: {
       title_label: "العنوان (اختياري)",
-      display_currency: "عملة العرض",
-      default_display_currency: "عملة العرض الافتراضية",
       default_range: "النطاق الزمني الافتراضي",
       tile_size: "حجم البلاطة",
       selected: "المحددة",
       drag_hint: "اسحب للترتيب",
       add: "إضافة",
-      no_sensors: "لم يتم العثور على أجهزة استشعار Easy Stock.",
-      setup_hint: "الإعداد في الإعدادات ← التكاملات ← Easy Stock.",
-      currency_inherit: "افتراضي"
+      no_sensors: "لم يتم العثور على أجهزة استشعار Zwitserleven Fondsen.",
+      setup_hint: "الإعداد في الإعدادات ← التكاملات ← Zwitserleven Fondsen."
     },
     card: { not_found: "غير موجود" }
   }
@@ -916,72 +856,16 @@ function t(lang) {
   const base = lang.split("-")[0].toLowerCase();
   return translations[base] ?? translations["en"];
 }
-const RAW_CURRENCY = "RAW";
-const CURRENCIES = [
-  { code: "EUR", label: "€ EUR" },
-  { code: "USD", label: "$ USD" },
-  { code: "GBP", label: "£ GBP" },
-  { code: "CHF", label: "Fr CHF" },
-  { code: "AUD", label: "A$ AUD" },
-  { code: "CAD", label: "CA$ CAD" },
-  { code: "JPY", label: "¥ JPY" },
-  { code: "SEK", label: "kr SEK" },
-  { code: "NOK", label: "kr NOK" },
-  { code: "DKK", label: "kr DKK" },
-  { code: "CNY", label: "¥ CNY" },
-  { code: "HKD", label: "HK$ HKD" },
-  // RAW = show the unmodified sensor value with its native currency code, no conversion.
-  // Needed for FX-rate symbols (e.g. GBPPLN=X reports value in PLN) where any conversion
-  // is meaningless, and as an honest fallback for unusual native currencies.
-  { code: RAW_CURRENCY, label: "RAW (no conversion)" }
-];
-const MINOR_UNIT = {
-  GBp: { major: "GBP", factor: 100 },
-  GBX: { major: "GBP", factor: 100 }
-};
-function normalizeNative(price, currency) {
-  const minor = MINOR_UNIT[currency];
-  if (minor) return { price: price / minor.factor, currency: minor.major };
-  return { price, currency };
-}
-function convertPrice(price, from, to, rates) {
-  const normalized = normalizeNative(price, from);
-  price = normalized.price;
-  from = normalized.currency;
-  if (from === to) return price;
-  const rateFrom = rates[from] ?? 1;
-  const rateTo = rates[to] ?? 1;
-  const inEur = from === "EUR" ? price : price / rateFrom;
-  return to === "EUR" ? inEur : inEur * rateTo;
-}
-function resolveDisplay(price, nativeCurrency, targetCurrency, rates) {
-  if (targetCurrency === RAW_CURRENCY) return { price, currency: nativeCurrency };
-  const hasRates = Object.keys(rates).length > 0;
-  if (!hasRates) return { price, currency: nativeCurrency };
-  return { price: convertPrice(price, nativeCurrency, targetCurrency, rates), currency: targetCurrency };
-}
-function isFxSymbol(symbol) {
-  return /=X$/i.test(symbol);
-}
-function resolveTargetCurrency(symbol, override, cardDefault) {
-  if (override) return override;
-  if (isFxSymbol(symbol)) return RAW_CURRENCY;
-  return cardDefault;
-}
-function entityIdOf(entry) {
-  return typeof entry === "string" ? entry : entry.entity;
-}
-function entityCurrencyOverride(entry) {
-  return typeof entry === "string" ? void 0 : entry.display_currency;
-}
-function priceFractionDigits(price) {
-  if (!Number.isFinite(price) || price === 0) return 2;
-  const magnitude = Math.floor(Math.log10(Math.abs(price)));
-  if (magnitude >= 1) return 2;
-  return Math.min(20, 4 - magnitude);
-}
-function hasIntradayData(attr) {
-  return attr.traded_today ?? attr.price_is_live ?? false;
+const CURRENCY = "EUR";
+const PRICE_DECIMALS = 4;
+function formatPrice(price, locale) {
+  if (isNaN(price)) return "–";
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: CURRENCY,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: PRICE_DECIMALS
+  }).format(price);
 }
 const SPARKLINE_WIDTH = 200;
 const SPARKLINE_HEIGHT = 48;
@@ -1013,7 +897,7 @@ function dayStr(d2) {
   return `${d2.getFullYear()}-${String(d2.getMonth() + 1).padStart(2, "0")}-${String(d2.getDate()).padStart(2, "0")}`;
 }
 function buildChartData(input) {
-  const { haData, yahooHistory, range, livePrice, previousClose, intradayData } = input;
+  const { haData, dailyHistory, range, livePrice, previousClose } = input;
   const now = input.now ?? /* @__PURE__ */ new Date();
   const today = dayStr(now);
   if (HA_HISTORY_RANGES.includes(range)) {
@@ -1021,11 +905,7 @@ function buildChartData(input) {
     todayStart.setHours(0, 0, 0, 0);
     const midnightISO = todayStart.toISOString();
     if (range === "1T") {
-      if (!intradayData) {
-        return [[midnightISO, livePrice], [now.toISOString(), livePrice]];
-      }
-      const lastYahooEntry = yahooHistory.length > 0 ? yahooHistory[yahooHistory.length - 1] : null;
-      const prev = lastYahooEntry && lastYahooEntry[0] < today ? lastYahooEntry[1] : previousClose > 0 ? previousClose : livePrice;
+      const prev = previousClose > 0 ? previousClose : livePrice;
       if (haData && haData.length >= 1) {
         const todayData = haData.filter(([t2]) => new Date(t2) >= todayStart);
         if (todayData.length >= 1) {
@@ -1037,7 +917,7 @@ function buildChartData(input) {
       return [[midnightISO, prev], [now.toISOString(), livePrice]];
     }
     if (haData && haData.length >= 2) return haData;
-    const base2 = yahooHistory.slice(-4);
+    const base2 = dailyHistory.slice(-4);
     return base2.length > 0 ? [...base2, [today, livePrice]] : [["prev", previousClose], [today, livePrice]];
   }
   let base;
@@ -1045,16 +925,19 @@ function buildChartData(input) {
     const cutoff = new Date(now);
     cutoff.setDate(cutoff.getDate() - 30);
     const cutoffStr = cutoff.toISOString().slice(0, 10);
-    const filtered = yahooHistory.filter(([d2]) => d2 >= cutoffStr);
-    base = filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
+    const filtered = dailyHistory.filter(([d2]) => d2 >= cutoffStr);
+    base = filtered.length >= 2 ? filtered : dailyHistory.slice(-2);
   } else if (range === "YTD") {
     const jan1 = `${now.getFullYear()}-01-01`;
-    const filtered = yahooHistory.filter(([d2]) => d2 >= jan1);
-    const prevYearEntries = yahooHistory.filter(([d2]) => d2 < jan1);
+    const filtered = dailyHistory.filter(([d2]) => d2 >= jan1);
+    const prevYearEntries = dailyHistory.filter(([d2]) => d2 < jan1);
     const prevYearClose = prevYearEntries[prevYearEntries.length - 1];
-    base = prevYearClose ? [prevYearClose, ...filtered] : filtered.length >= 2 ? filtered : yahooHistory.slice(-2);
+    base = prevYearClose ? [prevYearClose, ...filtered] : filtered.length >= 2 ? filtered : dailyHistory.slice(-2);
   } else {
-    base = yahooHistory;
+    const cutoff = new Date(now);
+    cutoff.setFullYear(cutoff.getFullYear() - 1);
+    const cutoffStr = dayStr(cutoff);
+    base = dailyHistory.filter(([d2]) => d2 >= cutoffStr);
   }
   if (base.length === 0) return [[today, livePrice]];
   const last = base[base.length - 1];
@@ -1070,40 +953,19 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (result) __defProp(target, key, result);
   return result;
 };
-let _rateCache = null;
-let _rateFetchInFlight = false;
-const RATE_TTL = 15 * 60 * 1e3;
-async function fetchRates() {
-  if (_rateCache && Date.now() - _rateCache.fetchedAt < RATE_TTL) {
-    return _rateCache.rates;
-  }
-  if (_rateFetchInFlight) {
-    return (_rateCache == null ? void 0 : _rateCache.rates) ?? {};
-  }
-  _rateFetchInFlight = true;
-  try {
-    const resp = await fetch("https://api.frankfurter.dev/v1/latest?base=EUR");
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    const rates = { EUR: 1, ...data.rates };
-    _rateCache = { rates, fetchedAt: Date.now() };
-    return rates;
-  } catch (err) {
-    console.warn("[easy-stock-card] Currency rate fetch failed, using last known rates:", err);
-    return (_rateCache == null ? void 0 : _rateCache.rates) ?? {};
-  } finally {
-    _rateFetchInFlight = false;
-  }
-}
+const DOMAIN = "zwitserleven_fondsen";
+const CARD_TAG = "zwitserleven-fondsen-card";
+const EDITOR_TAG = "zwitserleven-fondsen-card-editor";
+const LOG_PREFIX = `[${CARD_TAG}]`;
 console.info(
-  `[easy-stock-card] v${"0.5.1"} loaded from ${import.meta.url}`
+  `${LOG_PREFIX} v${"0.1.0"} loaded from ${import.meta.url}`
 );
 window.customCards = window.customCards || [];
-if (!window.customCards.some((c2) => c2.type === "easy-stock-card")) {
+if (!window.customCards.some((c2) => c2.type === CARD_TAG)) {
   window.customCards.push({
-    type: "easy-stock-card",
-    name: "Easy Stock Card",
-    description: "Displays stock prices from the Easy Stock integration with sparkline charts.",
+    type: CARD_TAG,
+    name: "Zwitserleven Fondsen Card",
+    description: "Displays Zwitserleven fund prices with sparkline charts.",
     preview: true
   });
 }
@@ -1119,7 +981,7 @@ const RANGES = [
   { value: "YTD", label: "YTD" },
   { value: "1J", label: "1Y" }
 ];
-const _EasyStockCardEditor = class _EasyStockCardEditor extends i {
+const _ZwitserlevenFondsenCardEditor = class _ZwitserlevenFondsenCardEditor extends i {
   constructor() {
     super(...arguments);
     this._dragIndex = null;
@@ -1127,10 +989,15 @@ const _EasyStockCardEditor = class _EasyStockCardEditor extends i {
   setConfig(config) {
     this._config = config;
   }
-  _detectStockSensors() {
+  /** Sensors of this integration only, even if another one also exposes a `symbol`. */
+  _detectFundSensors() {
     if (!this.hass) return [];
+    const registry = this.hass.entities ?? {};
     return Object.values(this.hass.states).filter(
-      (e2) => typeof e2.attributes["symbol"] === "string"
+      (e2) => {
+        var _a2;
+        return ((_a2 = registry[e2.entity_id]) == null ? void 0 : _a2.platform) === DOMAIN && typeof e2.attributes["symbol"] === "string";
+      }
     ).sort(
       (a2, b2) => a2.attributes["symbol"].localeCompare(
         b2.attributes["symbol"]
@@ -1160,11 +1027,11 @@ const _EasyStockCardEditor = class _EasyStockCardEditor extends i {
   }
   // ---- Render -------------------------------------------------------------
   render() {
-    var _a2, _b, _c;
+    var _a2, _b;
     if (!this._config) return A;
     const { title, default_range, entities = [] } = this._config;
-    const all = this._detectStockSensors();
-    const selectedIds = entities.map(entityIdOf);
+    const all = this._detectFundSensors();
+    const selectedIds = entities;
     const available = all.filter((s22) => !selectedIds.includes(s22.entity_id));
     const s2 = t(((_b = (_a2 = this.hass) == null ? void 0 : _a2.locale) == null ? void 0 : _b.language) ?? "en").editor;
     return b`
@@ -1177,20 +1044,6 @@ const _EasyStockCardEditor = class _EasyStockCardEditor extends i {
       this._set("title", v2 || void 0);
     }}
         ></ha-textfield>
-
-        <div class="field-label">${s2.default_display_currency}</div>
-        <select
-          class="currency-select"
-          .value=${((_c = this._config) == null ? void 0 : _c.display_currency) ?? "EUR"}
-          @change=${(e2) => this._set("display_currency", e2.target.value)}
-        >
-          ${CURRENCIES.map(({ code, label }) => {
-      var _a3;
-      return b`
-            <option value=${code} ?selected=${(((_a3 = this._config) == null ? void 0 : _a3.display_currency) ?? "EUR") === code}>${label}</option>
-          `;
-    })}
-        </select>
 
         <div class="field-label">${s2.default_range}</div>
         <div class="range-picker">
@@ -1220,9 +1073,7 @@ const _EasyStockCardEditor = class _EasyStockCardEditor extends i {
         ${entities.length > 0 ? b`
           <div class="section-label">${s2.selected} <span class="hint-inline">— ${s2.drag_hint}</span></div>
           <div class="selected-list">
-            ${entities.map((entry, index) => {
-      const entityId = entityIdOf(entry);
-      const override = entityCurrencyOverride(entry);
+            ${entities.map((entityId, index) => {
       const sensor = all.find((s22) => s22.entity_id === entityId);
       const name = sensor ? this._sensorName(sensor) : entityId;
       const symbol = (sensor == null ? void 0 : sensor.attributes.symbol) ?? "";
@@ -1239,17 +1090,6 @@ const _EasyStockCardEditor = class _EasyStockCardEditor extends i {
                   >⠿</span>
                   <span class="sensor-name">${name}</span>
                   <span class="sensor-meta">${symbol}</span>
-                  <select
-                    class="row-currency-select"
-                    title=${s2.display_currency}
-                    .value=${override ?? ""}
-                    @change=${(e2) => this._setEntityCurrency(index, e2.target.value)}
-                  >
-                    <option value="" ?selected=${!override}>${s2.currency_inherit}</option>
-                    ${CURRENCIES.map(({ code, label }) => b`
-                      <option value=${code} ?selected=${override === code}>${label}</option>
-                    `)}
-                  </select>
                   <button class="remove-btn" @click=${() => this._removeEntity(entityId)}>✕</button>
                 </div>
               `;
@@ -1283,18 +1123,10 @@ const _EasyStockCardEditor = class _EasyStockCardEditor extends i {
   _removeEntity(entityId) {
     var _a2;
     const current = ((_a2 = this._config) == null ? void 0 : _a2.entities) ?? [];
-    this._set("entities", current.filter((e2) => entityIdOf(e2) !== entityId));
-  }
-  /** Set (or clear, when currency is "") the per-asset display-currency override. */
-  _setEntityCurrency(index, currency) {
-    var _a2;
-    const entities = [...((_a2 = this._config) == null ? void 0 : _a2.entities) ?? []];
-    const id = entityIdOf(entities[index]);
-    entities[index] = currency ? { entity: id, display_currency: currency } : id;
-    this._set("entities", entities);
+    this._set("entities", current.filter((e2) => e2 !== entityId));
   }
 };
-_EasyStockCardEditor.styles = i$3`
+_ZwitserlevenFondsenCardEditor.styles = i$3`
     .editor {
       display: flex;
       flex-direction: column;
@@ -1309,16 +1141,6 @@ _EasyStockCardEditor.styles = i$3`
       font-size: 0.8rem;
       color: var(--secondary-text-color);
       margin-top: 4px;
-    }
-    .currency-select {
-      width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--divider-color);
-      border-radius: 4px;
-      background: var(--card-background-color, #fff);
-      color: var(--primary-text-color);
-      font-size: 0.88rem;
-      cursor: pointer;
     }
     .range-picker {
       display: flex;
@@ -1375,17 +1197,6 @@ _EasyStockCardEditor.styles = i$3`
       cursor: grab;
       flex-shrink: 0;
     }
-    .row-currency-select {
-      flex-shrink: 0;
-      max-width: 96px;
-      padding: 2px 4px;
-      border: 1px solid var(--divider-color);
-      border-radius: 4px;
-      background: var(--card-background-color, #fff);
-      color: var(--primary-text-color);
-      font-size: 0.72rem;
-      cursor: pointer;
-    }
     .remove-btn {
       background: none;
       border: none;
@@ -1436,47 +1247,40 @@ _EasyStockCardEditor.styles = i$3`
       margin: 4px 0;
     }
   `;
-let EasyStockCardEditor = _EasyStockCardEditor;
+let ZwitserlevenFondsenCardEditor = _ZwitserlevenFondsenCardEditor;
 __decorateClass([
   n2({ attribute: false })
-], EasyStockCardEditor.prototype, "hass");
+], ZwitserlevenFondsenCardEditor.prototype, "hass");
 __decorateClass([
   r()
-], EasyStockCardEditor.prototype, "_config");
+], ZwitserlevenFondsenCardEditor.prototype, "_config");
 __decorateClass([
   r()
-], EasyStockCardEditor.prototype, "_dragIndex");
+], ZwitserlevenFondsenCardEditor.prototype, "_dragIndex");
 const HA_HISTORY_TTL = 5 * 60 * 1e3;
-const _EasyStockCard = class _EasyStockCard extends i {
+const DAILY_HISTORY_TTL = 60 * 60 * 1e3;
+const _ZwitserlevenFondsenCard = class _ZwitserlevenFondsenCard extends i {
   constructor() {
     super(...arguments);
     this._timeRange = "1T";
-    this._rates = {};
     this._haCache = /* @__PURE__ */ new Map();
     this._fetching = /* @__PURE__ */ new Set();
-    this._yahooHistoryCache = /* @__PURE__ */ new Map();
-    this._fetchingYahoo = /* @__PURE__ */ new Set();
+    this._dailyHistoryCache = /* @__PURE__ */ new Map();
+    this._fetchingDaily = /* @__PURE__ */ new Set();
   }
   set hass(hass) {
     this._hass = hass;
-    if (!_rateCache || Date.now() - _rateCache.fetchedAt >= RATE_TTL) {
-      void fetchRates().then((rates) => {
-        if (Object.keys(rates).length > 0) this._rates = rates;
-      });
-    }
+    this.requestUpdate();
   }
   get hass() {
     return this._hass;
   }
   setConfig(config) {
     if (!Array.isArray(config.entities) || config.entities.length === 0) {
-      throw new Error("easy-stock-card: 'entities' muss ein nicht-leeres Array sein.");
+      throw new Error(`${CARD_TAG}: 'entities' must be a non-empty list.`);
     }
     this._config = config;
     this._timeRange = config.default_range ?? "1T";
-    void fetchRates().then((rates) => {
-      if (Object.keys(rates).length > 0) this._rates = rates;
-    });
   }
   getCardSize() {
     var _a2;
@@ -1485,14 +1289,14 @@ const _EasyStockCard = class _EasyStockCard extends i {
   }
   static getStubConfig() {
     return {
-      type: "custom:easy-stock-card",
-      title: "Mein Portfolio",
+      type: `custom:${CARD_TAG}`,
+      title: "Zwitserleven",
       entities: [],
       default_range: "1T"
     };
   }
   static getConfigElement() {
-    return document.createElement("easy-stock-card-editor");
+    return document.createElement(EDITOR_TAG);
   }
   // -------------------------------------------------------------------------
   // HA history cache
@@ -1524,34 +1328,34 @@ const _EasyStockCard = class _EasyStockCard extends i {
       this._haCache.set(key, { data, fetchedAt: Date.now() });
       this.requestUpdate();
     } catch (err) {
-      console.warn(`[easy-stock-card] HA history fetch failed for ${entityId}:`, err);
+      console.warn(`${LOG_PREFIX} HA history fetch failed for ${entityId}:`, err);
     } finally {
       this._fetching.delete(key);
     }
   }
   // -------------------------------------------------------------------------
-  // Yahoo history cache (fetched from /api/easy_stock/history)
+  // Daily price cache (fetched from /api/zwitserleven_fondsen/history)
   // -------------------------------------------------------------------------
-  _cachedYahooHistory(symbol) {
-    const entry = this._yahooHistoryCache.get(symbol);
-    if (!entry || Date.now() - entry.ts > 60 * 60 * 1e3) return null;
+  _cachedDailyHistory(symbol) {
+    const entry = this._dailyHistoryCache.get(symbol);
+    if (!entry || Date.now() - entry.ts > DAILY_HISTORY_TTL) return null;
     return entry.data;
   }
-  async _fetchYahooHistory(symbol) {
-    if (this._fetchingYahoo.has(symbol)) return;
-    if (this._cachedYahooHistory(symbol) !== null) return;
-    this._fetchingYahoo.add(symbol);
+  async _fetchDailyHistory(symbol) {
+    if (this._fetchingDaily.has(symbol)) return;
+    if (this._cachedDailyHistory(symbol) !== null) return;
+    this._fetchingDaily.add(symbol);
     try {
       const result = await this._hass.callApi(
         "GET",
-        `easy_stock/history?symbol=${encodeURIComponent(symbol)}`
+        `${DOMAIN}/history?symbol=${encodeURIComponent(symbol)}`
       );
-      this._yahooHistoryCache.set(symbol, { data: result.history, ts: Date.now() });
+      this._dailyHistoryCache.set(symbol, { data: result.history, ts: Date.now() });
       this.requestUpdate();
     } catch (err) {
-      console.warn(`[easy-stock-card] Yahoo history fetch failed for ${symbol}:`, err);
+      console.warn(`${LOG_PREFIX} daily history fetch failed for ${symbol}:`, err);
     } finally {
-      this._fetchingYahoo.delete(symbol);
+      this._fetchingDaily.delete(symbol);
     }
   }
   // -------------------------------------------------------------------------
@@ -1561,10 +1365,6 @@ const _EasyStockCard = class _EasyStockCard extends i {
     if (chartData.length < 2) return range === "1T" ? dailyChangePct : 0;
     const oldest = chartData[0][1];
     const newest = chartData[chartData.length - 1][1];
-    if (range === "1T") {
-      if (oldest === newest) return 0;
-      return oldest !== 0 ? (newest - oldest) / oldest * 100 : 0;
-    }
     return oldest !== 0 ? (newest - oldest) / oldest * 100 : 0;
   }
   // -------------------------------------------------------------------------
@@ -1602,10 +1402,8 @@ const _EasyStockCard = class _EasyStockCard extends i {
       </ha-card>
     `;
   }
-  _renderEntity(entry) {
-    var _a2, _b, _c, _d;
-    const entityId = entityIdOf(entry);
-    const currencyOverride = entityCurrencyOverride(entry);
+  _renderEntity(entityId) {
+    var _a2, _b, _c, _d, _e;
     const raw = (_a2 = this._hass) == null ? void 0 : _a2.states[entityId];
     if (!raw) {
       return b`
@@ -1620,48 +1418,36 @@ const _EasyStockCard = class _EasyStockCard extends i {
     const entity = raw;
     const attr = entity.attributes;
     const displayName = raw.attributes["friendly_name"] || attr.long_name || attr.symbol;
-    const nativeCurrency = attr.currency;
-    const cardDefaultCurrency = ((_d = this._config) == null ? void 0 : _d.display_currency) ?? "EUR";
-    const targetCurrency = resolveTargetCurrency(attr.symbol, currencyOverride, cardDefaultCurrency);
-    const isRaw = targetCurrency === RAW_CURRENCY;
+    const locale = (_e = (_d = this._hass) == null ? void 0 : _d.locale) == null ? void 0 : _e.language;
     const price = parseFloat(entity.state);
-    const { price: displayPrice, currency: displayCurrency } = resolveDisplay(
-      price,
-      nativeCurrency,
-      targetCurrency,
-      this._rates
-    );
-    void this._fetchYahooHistory(attr.symbol);
+    void this._fetchDailyHistory(attr.symbol);
     if (HA_HISTORY_RANGES.includes(this._timeRange)) {
       void this._fetchHaHistory(entityId, this._timeRange);
     }
-    const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
-    const intradayData = hasIntradayData(attr);
+    const dailyHistory = this._cachedDailyHistory(attr.symbol) ?? [];
     const chartData = buildChartData({
       haData: HA_HISTORY_RANGES.includes(this._timeRange) ? this._cachedHaHistory(entityId, this._timeRange) : null,
-      yahooHistory,
+      dailyHistory,
       range: this._timeRange,
       livePrice: price,
-      previousClose: attr.previous_close ?? 0,
-      intradayData
+      previousClose: attr.previous_close ?? 0
     });
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
     const trendColor = isPositive ? "var(--success-color, #4caf50)" : "var(--error-color, #f44336)";
     const arrow = isPositive ? "▲" : "▼";
-    const refRaw = chartData.length > 0 ? chartData[0][1] : null;
-    const displayRefPrice = refRaw !== null ? resolveDisplay(refRaw, nativeCurrency, targetCurrency, this._rates).price : null;
-    const showRef = displayRefPrice !== null && Math.abs(displayRefPrice - displayPrice) > 1e-4;
+    const refPrice = chartData.length > 0 ? chartData[0][1] : null;
+    const showRef = refPrice !== null && Math.abs(refPrice - price) > 1e-4;
     return b`
       <div class="asset-tile" @click=${() => this._openMoreInfo(entityId)}>
         <div class="asset-header">
           <span class="asset-name" title="${displayName}">${displayName}</span>
-          <span class="asset-ticker">${attr.symbol}</span>
+          <span class="asset-symbol">${attr.symbol}</span>
         </div>
         <div class="asset-price">
           <div class="price-stack">
-            <span class="price">${this._formatPrice(displayPrice, displayCurrency, isRaw)}</span>
-            ${showRef ? b`<span class="ref-price">${this._formatPrice(displayRefPrice, displayCurrency, isRaw)}</span>` : A}
+            <span class="price">${formatPrice(price, locale)}</span>
+            ${showRef ? b`<span class="ref-price">${formatPrice(refPrice, locale)}</span>` : A}
           </div>
           <span class="change" style="color:${trendColor}">
             <span class="arrow">${arrow}</span>${Math.abs(periodChange).toFixed(2)}%
@@ -1696,23 +1482,8 @@ const _EasyStockCard = class _EasyStockCard extends i {
       </svg>
     `;
   }
-  _formatPrice(price, currency, plain = false) {
-    if (isNaN(price)) return "–";
-    const maxDigits = priceFractionDigits(price);
-    if (plain) return `${price.toFixed(maxDigits)} ${currency}`;
-    try {
-      return new Intl.NumberFormat(void 0, {
-        style: "currency",
-        currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: maxDigits
-      }).format(price);
-    } catch {
-      return `${price.toFixed(2)} ${currency}`;
-    }
-  }
 };
-_EasyStockCard.styles = i$3`
+_ZwitserlevenFondsenCard.styles = i$3`
     ha-card { height: 100%; }
 
     .card-top {
@@ -1786,7 +1557,7 @@ _EasyStockCard.styles = i$3`
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .asset-ticker {
+    .asset-symbol {
       font-size: 0.7rem;
       color: var(--secondary-text-color);
       font-family: monospace;
@@ -1835,29 +1606,26 @@ _EasyStockCard.styles = i$3`
     }
     .error { color: var(--error-color, #f44336); }
   `;
-let EasyStockCard = _EasyStockCard;
+let ZwitserlevenFondsenCard = _ZwitserlevenFondsenCard;
 __decorateClass([
   r()
-], EasyStockCard.prototype, "_config");
+], ZwitserlevenFondsenCard.prototype, "_config");
 __decorateClass([
   r()
-], EasyStockCard.prototype, "_timeRange");
-__decorateClass([
-  r()
-], EasyStockCard.prototype, "_rates");
+], ZwitserlevenFondsenCard.prototype, "_timeRange");
 function defineOnce(tag, ctor) {
   if (customElements.get(tag)) {
     console.warn(
-      `[easy-stock-card] <${tag}> is already registered by another copy of this card, so this copy was ignored: ${import.meta.url}. The copy that loaded first wins, which may be an older build. Check Settings > Dashboards > three-dot menu > Resources for a duplicate entry (a leftover /local/easy-stock-card.js is the usual cause) and remove it.`
+      `${LOG_PREFIX} <${tag}> is already registered by another copy of this card, so this copy was ignored: ${import.meta.url}. The copy that loaded first wins, which may be an older build. Check Settings > Dashboards > three-dot menu > Resources for a duplicate entry (a leftover /local/${CARD_TAG}.js is the usual cause) and remove it.`
     );
     return;
   }
   customElements.define(tag, ctor);
 }
-defineOnce("easy-stock-card-editor", EasyStockCardEditor);
-defineOnce("easy-stock-card", EasyStockCard);
+defineOnce(EDITOR_TAG, ZwitserlevenFondsenCardEditor);
+defineOnce(CARD_TAG, ZwitserlevenFondsenCard);
 export {
-  EasyStockCard,
-  EasyStockCardEditor
+  ZwitserlevenFondsenCard,
+  ZwitserlevenFondsenCardEditor
 };
-//# sourceMappingURL=easy-stock-card.js.map
+//# sourceMappingURL=zwitserleven-fondsen-card.js.map

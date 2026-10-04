@@ -8,8 +8,8 @@ export const SPARKLINE_PAD = 2;
  * Smallest price span the y-axis is ever scaled to, relative to the mid price.
  *
  * Plain min/max autoscaling gives every series the full chart height, however
- * little it actually moved: a quote sitting still over a weekend still wobbles
- * by a rounding digit, and 2 ppm was being drawn as a violent sawtooth (#17).
+ * little it actually moved: a price that wobbles by a rounding digit, 2 ppm,
+ * was being drawn as a violent sawtooth.
  * Anything below this floor is damped in proportion, so noise reads as flat and
  * a genuinely quiet day reads as quiet.
  */

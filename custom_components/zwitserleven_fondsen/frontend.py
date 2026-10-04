@@ -1,4 +1,4 @@
-"""Serve and register the Easy Stock Lovelace card."""
+"""Serve and register the Zwitserleven Fondsen Lovelace card."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ except ImportError:  # pragma: no cover - only reachable on cores < 2025.2
 
 _LOGGER = logging.getLogger(__name__)
 
-CARD_FILENAME = "easy-stock-card.js"
+CARD_FILENAME = "zwitserleven-fondsen-card.js"
 CARD_URL_BASE = f"/{DOMAIN}/{CARD_FILENAME}"
 DATA_FRONTEND = f"{DOMAIN}_frontend"
 
@@ -71,7 +71,7 @@ def _writable_resources(hass: HomeAssistant):
     data = hass.data.get(LOVELACE_DATA)
     if data is None:
         _LOGGER.warning(
-            "Lovelace data is not available, so the Easy Stock card cannot be "
+            "Lovelace data is not available, so the Zwitserleven Fondsen card cannot be "
             "registered as a dashboard resource. Falling back to injecting %s "
             "through the frontend instead",
             CARD_URL_BASE,
@@ -82,7 +82,7 @@ def _writable_resources(hass: HomeAssistant):
     if mode is None:
         _LOGGER.warning(
             "This Home Assistant version reports no Lovelace resource mode "
-            "(%s), so the Easy Stock card cannot be registered as a dashboard "
+            "(%s), so the Zwitserleven Fondsen card cannot be registered as a dashboard "
             "resource. Falling back to injecting %s through the frontend "
             "instead",
             type(data).__name__,
@@ -93,7 +93,7 @@ def _writable_resources(hass: HomeAssistant):
     if mode != MODE_STORAGE:
         _LOGGER.info(
             "Lovelace resources are in '%s' mode, which is read-only, so the "
-            "Easy Stock card is injected through the frontend as %s instead of "
+            "Zwitserleven Fondsen card is injected through the frontend as %s instead of "
             "being registered as a dashboard resource",
             mode,
             CARD_URL_BASE,
@@ -104,7 +104,7 @@ def _writable_resources(hass: HomeAssistant):
     if not hasattr(resources, "async_create_item"):
         _LOGGER.warning(
             "Lovelace reports '%s' resource mode but its resource collection "
-            "(%s) is read-only, so the Easy Stock card is injected through the "
+            "(%s) is read-only, so the Zwitserleven Fondsen card is injected through the "
             "frontend as %s instead",
             mode,
             type(resources).__name__,
@@ -175,13 +175,13 @@ async def async_register_card(hass: HomeAssistant) -> None:
                 item["id"], {"res_type": "module", "url": url}
             )
             _LOGGER.info(
-                "Updated the Easy Stock dashboard resource %s to %s",
+                "Updated the Zwitserleven Fondsen dashboard resource %s to %s",
                 item["id"],
                 url,
             )
         else:
             _LOGGER.info(
-                "Easy Stock is already registered as dashboard resource %s (%s)",
+                "Zwitserleven Fondsen is already registered as dashboard resource %s (%s)",
                 item["id"],
                 url,
             )
@@ -190,7 +190,7 @@ async def async_register_card(hass: HomeAssistant) -> None:
     created = await resources.async_create_item({"res_type": "module", "url": url})
     state["resource_id"] = created["id"]
     _LOGGER.info(
-        "Registered the Easy Stock card as dashboard resource %s (%s)",
+        "Registered the Zwitserleven Fondsen card as dashboard resource %s (%s)",
         created["id"],
         url,
     )

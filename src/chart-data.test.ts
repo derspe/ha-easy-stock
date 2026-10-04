@@ -8,11 +8,10 @@ const at = (h: number, m = 0) => new Date(2026, 8, 4, h, m, 0).toISOString();
 const YESTERDAY_EVENING = new Date(2026, 8, 3, 22, 0, 0).toISOString();
 
 const base = {
-  yahooHistory: [["2026-09-02", 98.0], ["2026-09-03", 99.0]] as [string, number][],
+  dailyHistory: [["2026-09-02", 98.0], ["2026-09-03", 99.0]] as [string, number][],
   range: "1T" as const,
   livePrice: 101,
   previousClose: 99,
-  intradayData: true,
   now: NOW,
 };
 
@@ -44,23 +43,26 @@ describe("buildChartData — 1T", () => {
     expect(data.map((p) => p[1])).not.toContain(90);
   });
 
-  it("stops the not-yet-traded line at the current time instead of the right edge", () => {
-    // Berkshire before the NYSE opens: the day has not happened yet, so the line
-    // must run midnight -> now like every other tile, not across the whole card.
-    const data = buildChartData({ ...base, haData: null, intradayData: false });
+  it("stops the line at the current time instead of the right edge", () => {
+    const data = buildChartData({ ...base, haData: null });
 
     expect(data[0][0]).toBe(MIDNIGHT.toISOString());
     expect(data[data.length - 1][0]).toBe(NOW.toISOString());
   });
 
-  it("draws a flat line when the asset did not trade today", () => {
-    const data = buildChartData({ ...base, haData: [[at(10), 100]], intradayData: false });
-
-    expect(new Set(data.map((p) => p[1])).size).toBe(1);
-  });
-
   it("falls back to previous close and live price when the recorder holds nothing for today", () => {
     const data = buildChartData({ ...base, haData: [[YESTERDAY_EVENING, 90]] });
+
+    expect(data[0][1]).toBe(99);
+    expect(data[data.length - 1][1]).toBe(101);
+  });
+});
+
+describe("buildChartData — 1T baseline", () => {
+  it("uses previous_close even when the latest stored price is from an earlier day", () => {
+    // Prices are published late: the newest stored entry is the live price itself.
+    const dailyHistory: [string, number][] = [["2026-09-01", 99], ["2026-09-02", 101]];
+    const data = buildChartData({ ...base, dailyHistory, haData: null });
 
     expect(data[0][1]).toBe(99);
     expect(data[data.length - 1][1]).toBe(101);
@@ -73,9 +75,16 @@ describe("buildChartData — other ranges", () => {
     expect(buildChartData({ ...base, range: "1W", haData: week })).toEqual(week);
   });
 
-  it("closes a Yahoo daily range with today's live price", () => {
+  it("closes a daily range with today's live price", () => {
     const data = buildChartData({ ...base, range: "1J", haData: null });
 
     expect(data[data.length - 1]).toEqual(["2026-09-04", 101]);
+  });
+
+  it("limits 1J to the last year of stored prices", () => {
+    const dailyHistory: [string, number][] = [["2025-09-03", 80], ["2025-09-04", 81], ["2026-09-03", 99]];
+    const data = buildChartData({ ...base, dailyHistory, range: "1J", haData: null });
+
+    expect(data.map(([d]) => d)).toEqual(["2025-09-04", "2026-09-03", "2026-09-04"]);
   });
 });

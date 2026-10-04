@@ -22,7 +22,7 @@ body:
       label: Steps to reproduce
       description: How can the bug be reliably triggered?
       placeholder: |
-        1. Add sensor for symbol AAPL
+        1. Add a sensor for fund LTAAF
         2. Open card, select range 1M
         3. Chart shows flat line at 0%
     validations:
@@ -48,8 +48,8 @@ body:
   - type: input
     id: integration_version
     attributes:
-      label: Easy Stock version
-      description: Found in HACS or Settings → Devices & Services → Easy Stock
+      label: Zwitserleven Fondsen version
+      description: Found in custom_components/zwitserleven_fondsen/manifest.json
       placeholder: "0.1.0"
     validations:
       required: true
@@ -57,9 +57,9 @@ body:
   - type: input
     id: symbol
     attributes:
-      label: Affected symbol(s)
-      description: Yahoo Finance ticker(s) involved, if applicable
-      placeholder: "AAPL, IWDA.AS, BTC-EUR"
+      label: Affected fund(s)
+      description: Zwitserleven fund ID(s) involved, if applicable
+      placeholder: "LTAAF, LTAOB"
 
   - type: textarea
     id: logs
@@ -67,7 +67,7 @@ body:
       label: Relevant log output
       description: |
         Copy any relevant entries from Settings → System → Logs.
-        Filter by `easy_stock` to narrow it down.
+        Filter by `zwitserleven_fondsen` to narrow it down.
       render: text
 
   - type: textarea

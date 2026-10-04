@@ -2,61 +2,25 @@ import { LitElement, html, css, nothing, svg } from "lit";
 import { property, state } from "lit/decorators.js";
 import type {
   HomeAssistant,
-  EasyStockCardConfig,
-  EntityConfig,
+  ZwitserlevenFondsenCardConfig,
   StockEntity,
   TimeRange,
 } from "./types";
 import { t } from "./translations";
-import {
-  CURRENCIES,
-  RAW_CURRENCY,
-  resolveDisplay,
-  resolveTargetCurrency,
-  entityIdOf,
-  entityCurrencyOverride,
-  priceFractionDigits,
-} from "./currency";
-import { hasIntradayData } from "./market";
+import { formatPrice } from "./format";
 import { sparklinePoints, SPARKLINE_HEIGHT, SPARKLINE_WIDTH } from "./sparkline";
 import { buildChartData, HA_HISTORY_RANGES } from "./chart-data";
 
-// ---------------------------------------------------------------------------
-// Currency rate fetching (the rate table + conversion model live in ./currency)
-// ---------------------------------------------------------------------------
-
-let _rateCache: { rates: Record<string, number>; fetchedAt: number } | null = null;
-let _rateFetchInFlight = false;
-const RATE_TTL = 15 * 60 * 1000; // 15 minutes
-
-async function fetchRates(): Promise<Record<string, number>> {
-  if (_rateCache && Date.now() - _rateCache.fetchedAt < RATE_TTL) {
-    return _rateCache.rates;
-  }
-  if (_rateFetchInFlight) {
-    return _rateCache?.rates ?? {};
-  }
-  _rateFetchInFlight = true;
-  try {
-    const resp = await fetch("https://api.frankfurter.dev/v1/latest?base=EUR");
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    const rates: Record<string, number> = { EUR: 1, ...data.rates };
-    _rateCache = { rates, fetchedAt: Date.now() };
-    return rates;
-  } catch (err) {
-    console.warn("[easy-stock-card] Currency rate fetch failed, using last known rates:", err);
-    return _rateCache?.rates ?? {};
-  } finally {
-    _rateFetchInFlight = false;
-  }
-}
+const DOMAIN = "zwitserleven_fondsen";
+const CARD_TAG = "zwitserleven-fondsen-card";
+const EDITOR_TAG = "zwitserleven-fondsen-card-editor";
+const LOG_PREFIX = `[${CARD_TAG}]`;
 
 // ---------------------------------------------------------------------------
 // Build identity
 // ---------------------------------------------------------------------------
 
-// Injected by vite.config.ts from custom_components/easy_stock/manifest.json,
+// Injected by vite.config.ts from custom_components/zwitserleven_fondsen/manifest.json,
 // so it can never drift from the released version.
 declare const __CARD_VERSION__: string;
 
@@ -66,7 +30,7 @@ declare const __CARD_VERSION__: string;
 // reports the card missing or behaving like an older release. Two of these
 // lines means two copies are registered.
 console.info(
-  `[easy-stock-card] v${__CARD_VERSION__} loaded from ${import.meta.url}`,
+  `${LOG_PREFIX} v${__CARD_VERSION__} loaded from ${import.meta.url}`,
 );
 
 // ---------------------------------------------------------------------------
@@ -74,11 +38,11 @@ console.info(
 // ---------------------------------------------------------------------------
 
 window.customCards = window.customCards || [];
-if (!window.customCards.some((c) => c.type === "easy-stock-card")) {
+if (!window.customCards.some((c) => c.type === CARD_TAG)) {
   window.customCards.push({
-    type: "easy-stock-card",
-    name: "Easy Stock Card",
-    description: "Displays stock prices from the Easy Stock integration with sparkline charts.",
+    type: CARD_TAG,
+    name: "Zwitserleven Fondsen Card",
+    description: "Displays Zwitserleven fund prices with sparkline charts.",
     preview: true,
   });
 }
@@ -101,20 +65,24 @@ const RANGES: { value: TimeRange; label: string }[] = [
 // Editor
 // ---------------------------------------------------------------------------
 
-export class EasyStockCardEditor extends LitElement {
+export class ZwitserlevenFondsenCardEditor extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistant;
-  @state() private _config?: EasyStockCardConfig;
+  @state() private _config?: ZwitserlevenFondsenCardConfig;
   @state() private _dragIndex: number | null = null;
 
-  setConfig(config: EasyStockCardConfig): void {
+  setConfig(config: ZwitserlevenFondsenCardConfig): void {
     this._config = config;
   }
 
-  private _detectStockSensors(): StockEntity[] {
+  /** Sensors of this integration only, even if another one also exposes a `symbol`. */
+  private _detectFundSensors(): StockEntity[] {
     if (!this.hass) return [];
+    const registry = this.hass.entities ?? {};
     return Object.values(this.hass.states)
       .filter(
-        (e) => typeof e.attributes["symbol"] === "string"
+        (e) =>
+          registry[e.entity_id]?.platform === DOMAIN &&
+          typeof e.attributes["symbol"] === "string"
       )
       .sort((a, b) =>
         (a.attributes["symbol"] as string).localeCompare(
@@ -153,8 +121,8 @@ export class EasyStockCardEditor extends LitElement {
   protected render() {
     if (!this._config) return nothing;
     const { title, default_range, entities = [] } = this._config;
-    const all = this._detectStockSensors();
-    const selectedIds = entities.map(entityIdOf);
+    const all = this._detectFundSensors();
+    const selectedIds = entities;
     const available = all.filter((s) => !selectedIds.includes(s.entity_id));
     const s = t(this.hass?.locale?.language ?? "en").editor;
 
@@ -168,17 +136,6 @@ export class EasyStockCardEditor extends LitElement {
             this._set("title", v || undefined);
           }}
         ></ha-textfield>
-
-        <div class="field-label">${s.default_display_currency}</div>
-        <select
-          class="currency-select"
-          .value=${this._config?.display_currency ?? "EUR"}
-          @change=${(e: Event) => this._set("display_currency", (e.target as HTMLSelectElement).value)}
-        >
-          ${CURRENCIES.map(({ code, label }) => html`
-            <option value=${code} ?selected=${(this._config?.display_currency ?? "EUR") === code}>${label}</option>
-          `)}
-        </select>
 
         <div class="field-label">${s.default_range}</div>
         <div class="range-picker">
@@ -205,9 +162,7 @@ export class EasyStockCardEditor extends LitElement {
         ${entities.length > 0 ? html`
           <div class="section-label">${s.selected} <span class="hint-inline">— ${s.drag_hint}</span></div>
           <div class="selected-list">
-            ${entities.map((entry, index) => {
-              const entityId = entityIdOf(entry);
-              const override = entityCurrencyOverride(entry);
+            ${entities.map((entityId, index) => {
               const sensor = all.find((s) => s.entity_id === entityId);
               const name = sensor ? this._sensorName(sensor) : entityId;
               const symbol = sensor?.attributes.symbol ?? "";
@@ -224,18 +179,6 @@ export class EasyStockCardEditor extends LitElement {
                   >⠿</span>
                   <span class="sensor-name">${name}</span>
                   <span class="sensor-meta">${symbol}</span>
-                  <select
-                    class="row-currency-select"
-                    title=${s.display_currency}
-                    .value=${override ?? ""}
-                    @change=${(e: Event) =>
-                      this._setEntityCurrency(index, (e.target as HTMLSelectElement).value)}
-                  >
-                    <option value="" ?selected=${!override}>${s.currency_inherit}</option>
-                    ${CURRENCIES.map(({ code, label }) => html`
-                      <option value=${code} ?selected=${override === code}>${label}</option>
-                    `)}
-                  </select>
                   <button class="remove-btn" @click=${() => this._removeEntity(entityId)}>✕</button>
                 </div>
               `;
@@ -259,8 +202,8 @@ export class EasyStockCardEditor extends LitElement {
     `;
   }
 
-  private _set(key: keyof EasyStockCardConfig, value: unknown): void {
-    const config = { ...this._config!, [key]: value } as EasyStockCardConfig;
+  private _set(key: keyof ZwitserlevenFondsenCardConfig, value: unknown): void {
+    const config = { ...this._config!, [key]: value } as ZwitserlevenFondsenCardConfig;
     if (value === undefined) delete (config as Record<string, unknown>)[key];
     this.dispatchEvent(new CustomEvent("config-changed", { detail: { config } }));
   }
@@ -272,15 +215,7 @@ export class EasyStockCardEditor extends LitElement {
 
   private _removeEntity(entityId: string): void {
     const current = this._config?.entities ?? [];
-    this._set("entities", current.filter((e) => entityIdOf(e) !== entityId));
-  }
-
-  /** Set (or clear, when currency is "") the per-asset display-currency override. */
-  private _setEntityCurrency(index: number, currency: string): void {
-    const entities = [...(this._config?.entities ?? [])];
-    const id = entityIdOf(entities[index]);
-    entities[index] = currency ? { entity: id, display_currency: currency } : id;
-    this._set("entities", entities);
+    this._set("entities", current.filter((e) => e !== entityId));
   }
 
   static styles = css`
@@ -298,16 +233,6 @@ export class EasyStockCardEditor extends LitElement {
       font-size: 0.8rem;
       color: var(--secondary-text-color);
       margin-top: 4px;
-    }
-    .currency-select {
-      width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--divider-color);
-      border-radius: 4px;
-      background: var(--card-background-color, #fff);
-      color: var(--primary-text-color);
-      font-size: 0.88rem;
-      cursor: pointer;
     }
     .range-picker {
       display: flex;
@@ -363,17 +288,6 @@ export class EasyStockCardEditor extends LitElement {
       color: var(--secondary-text-color);
       cursor: grab;
       flex-shrink: 0;
-    }
-    .row-currency-select {
-      flex-shrink: 0;
-      max-width: 96px;
-      padding: 2px 4px;
-      border: 1px solid var(--divider-color);
-      border-radius: 4px;
-      background: var(--card-background-color, #fff);
-      color: var(--primary-text-color);
-      font-size: 0.72rem;
-      cursor: pointer;
     }
     .remove-btn {
       background: none;
@@ -441,43 +355,36 @@ interface HaHistoryCacheEntry {
   fetchedAt: number;
 }
 
-const HA_HISTORY_TTL = 5 * 60 * 1000; // 5 min — matches sensor update interval
+const HA_HISTORY_TTL = 5 * 60 * 1000; // 5 min
+const DAILY_HISTORY_TTL = 60 * 60 * 1000; // 1 h — prices change once a day
 
-export class EasyStockCard extends LitElement {
+export class ZwitserlevenFondsenCard extends LitElement {
   private _hass?: HomeAssistant;
-  @state() private _config?: EasyStockCardConfig;
+  @state() private _config?: ZwitserlevenFondsenCardConfig;
   @state() private _timeRange: TimeRange = "1T";
-  @state() private _rates: Record<string, number> = {};
 
   /** Cache: "${entityId}:${range}" → { data, fetchedAt } */
   private _haCache = new Map<string, HaHistoryCacheEntry>();
   private _fetching = new Set<string>();
 
-  /** Cache: symbol → { data, ts } — Yahoo daily history from REST endpoint */
-  private _yahooHistoryCache = new Map<string, { data: [string, number][]; ts: number }>();
-  private _fetchingYahoo = new Set<string>();
+  /** Cache: symbol → { data, ts } — stored daily prices from the REST endpoint */
+  private _dailyHistoryCache = new Map<string, { data: [string, number][]; ts: number }>();
+  private _fetchingDaily = new Set<string>();
 
   public set hass(hass: HomeAssistant) {
     this._hass = hass;
-    if (!_rateCache || Date.now() - _rateCache.fetchedAt >= RATE_TTL) {
-      void fetchRates().then((rates) => {
-        if (Object.keys(rates).length > 0) this._rates = rates;
-      });
-    }
+    this.requestUpdate();
   }
   public get hass(): HomeAssistant | undefined {
     return this._hass;
   }
 
-  public setConfig(config: EasyStockCardConfig): void {
+  public setConfig(config: ZwitserlevenFondsenCardConfig): void {
     if (!Array.isArray(config.entities) || config.entities.length === 0) {
-      throw new Error("easy-stock-card: 'entities' muss ein nicht-leeres Array sein.");
+      throw new Error(`${CARD_TAG}: 'entities' must be a non-empty list.`);
     }
     this._config = config;
     this._timeRange = config.default_range ?? "1T";
-    void fetchRates().then((rates) => {
-      if (Object.keys(rates).length > 0) this._rates = rates;
-    });
   }
 
   public getCardSize(): number {
@@ -485,17 +392,17 @@ export class EasyStockCard extends LitElement {
     return rows * 3 + 1;
   }
 
-  public static getStubConfig(): EasyStockCardConfig {
+  public static getStubConfig(): ZwitserlevenFondsenCardConfig {
     return {
-      type: "custom:easy-stock-card",
-      title: "Mein Portfolio",
+      type: `custom:${CARD_TAG}`,
+      title: "Zwitserleven",
       entities: [],
       default_range: "1T",
     };
   }
 
   public static getConfigElement(): HTMLElement {
-    return document.createElement("easy-stock-card-editor");
+    return document.createElement(EDITOR_TAG);
   }
 
   // -------------------------------------------------------------------------
@@ -539,38 +446,38 @@ export class EasyStockCard extends LitElement {
       this._haCache.set(key, { data, fetchedAt: Date.now() });
       this.requestUpdate();
     } catch (err) {
-      console.warn(`[easy-stock-card] HA history fetch failed for ${entityId}:`, err);
+      console.warn(`${LOG_PREFIX} HA history fetch failed for ${entityId}:`, err);
     } finally {
       this._fetching.delete(key);
     }
   }
 
   // -------------------------------------------------------------------------
-  // Yahoo history cache (fetched from /api/easy_stock/history)
+  // Daily price cache (fetched from /api/zwitserleven_fondsen/history)
   // -------------------------------------------------------------------------
 
-  private _cachedYahooHistory(symbol: string): [string, number][] | null {
-    const entry = this._yahooHistoryCache.get(symbol);
-    if (!entry || Date.now() - entry.ts > 60 * 60 * 1000) return null; // 1h TTL
+  private _cachedDailyHistory(symbol: string): [string, number][] | null {
+    const entry = this._dailyHistoryCache.get(symbol);
+    if (!entry || Date.now() - entry.ts > DAILY_HISTORY_TTL) return null;
     return entry.data;
   }
 
-  private async _fetchYahooHistory(symbol: string): Promise<void> {
-    if (this._fetchingYahoo.has(symbol)) return;
-    if (this._cachedYahooHistory(symbol) !== null) return;
+  private async _fetchDailyHistory(symbol: string): Promise<void> {
+    if (this._fetchingDaily.has(symbol)) return;
+    if (this._cachedDailyHistory(symbol) !== null) return;
 
-    this._fetchingYahoo.add(symbol);
+    this._fetchingDaily.add(symbol);
     try {
       const result = await this._hass!.callApi<{ symbol: string; history: [string, number][] }>(
         "GET",
-        `easy_stock/history?symbol=${encodeURIComponent(symbol)}`
+        `${DOMAIN}/history?symbol=${encodeURIComponent(symbol)}`
       );
-      this._yahooHistoryCache.set(symbol, { data: result.history, ts: Date.now() });
+      this._dailyHistoryCache.set(symbol, { data: result.history, ts: Date.now() });
       this.requestUpdate();
     } catch (err) {
-      console.warn(`[easy-stock-card] Yahoo history fetch failed for ${symbol}:`, err);
+      console.warn(`${LOG_PREFIX} daily history fetch failed for ${symbol}:`, err);
     } finally {
-      this._fetchingYahoo.delete(symbol);
+      this._fetchingDaily.delete(symbol);
     }
   }
 
@@ -587,12 +494,6 @@ export class EasyStockCard extends LitElement {
     const oldest = chartData[0][1];
     const newest = chartData[chartData.length - 1][1];
 
-    if (range === "1T") {
-      // Flat line = market closed for this asset (stock on weekend) → 0 %
-      if (oldest === newest) return 0;
-      // Meaningful movement = crypto or live session → compute from chart endpoints
-      return oldest !== 0 ? ((newest - oldest) / oldest) * 100 : 0;
-    }
     return oldest !== 0 ? ((newest - oldest) / oldest) * 100 : 0;
   }
 
@@ -635,9 +536,7 @@ export class EasyStockCard extends LitElement {
     `;
   }
 
-  private _renderEntity(entry: EntityConfig) {
-    const entityId = entityIdOf(entry);
-    const currencyOverride = entityCurrencyOverride(entry);
+  private _renderEntity(entityId: string) {
     const raw = this._hass?.states[entityId];
     if (!raw) {
       return html`
@@ -653,36 +552,23 @@ export class EasyStockCard extends LitElement {
     const entity = raw as unknown as { state: string; attributes: import("./types").StockAttributes };
     const attr = entity.attributes;
     const displayName = (raw.attributes["friendly_name"] as string) || attr.long_name || attr.symbol;
-    const nativeCurrency = attr.currency;
-    const cardDefaultCurrency = this._config?.display_currency ?? "EUR";
-    const targetCurrency = resolveTargetCurrency(attr.symbol, currencyOverride, cardDefaultCurrency);
-    const isRaw = targetCurrency === RAW_CURRENCY;
+    const locale = this._hass?.locale?.language;
     const price = parseFloat(entity.state);
-    const { price: displayPrice, currency: displayCurrency } = resolveDisplay(
-      price,
-      nativeCurrency,
-      targetCurrency,
-      this._rates
-    );
     // Trigger async fetches (no-op if cached or already in flight)
-    void this._fetchYahooHistory(attr.symbol);
+    void this._fetchDailyHistory(attr.symbol);
     if (HA_HISTORY_RANGES.includes(this._timeRange)) {
       void this._fetchHaHistory(entityId, this._timeRange as "1T" | "1W");
     }
-    const yahooHistory = this._cachedYahooHistory(attr.symbol) ?? [];
+    const dailyHistory = this._cachedDailyHistory(attr.symbol) ?? [];
 
-    // The 1T chart asks "did this asset trade today", not "is the exchange open
-    // right now" — those diverge for every hour between a close and UTC midnight.
-    const intradayData = hasIntradayData(attr);
     const chartData = buildChartData({
       haData: HA_HISTORY_RANGES.includes(this._timeRange)
         ? this._cachedHaHistory(entityId, this._timeRange as "1T" | "1W")
         : null,
-      yahooHistory,
+      dailyHistory,
       range: this._timeRange,
       livePrice: price,
       previousClose: attr.previous_close ?? 0,
-      intradayData,
     });
     const periodChange = this._calcPeriodChange(chartData, this._timeRange, attr.change_pct ?? 0);
     const isPositive = periodChange >= 0;
@@ -691,22 +577,19 @@ export class EasyStockCard extends LitElement {
       : "var(--error-color, #f44336)";
     const arrow = isPositive ? "▲" : "▼";
 
-    const refRaw = chartData.length > 0 ? chartData[0][1] : null;
-    const displayRefPrice = refRaw !== null
-      ? resolveDisplay(refRaw, nativeCurrency, targetCurrency, this._rates).price
-      : null;
-    const showRef = displayRefPrice !== null && Math.abs(displayRefPrice - displayPrice) > 0.0001;
+    const refPrice = chartData.length > 0 ? chartData[0][1] : null;
+    const showRef = refPrice !== null && Math.abs(refPrice - price) > 0.0001;
 
     return html`
       <div class="asset-tile" @click=${() => this._openMoreInfo(entityId)}>
         <div class="asset-header">
           <span class="asset-name" title="${displayName}">${displayName}</span>
-          <span class="asset-ticker">${attr.symbol}</span>
+          <span class="asset-symbol">${attr.symbol}</span>
         </div>
         <div class="asset-price">
           <div class="price-stack">
-            <span class="price">${this._formatPrice(displayPrice, displayCurrency, isRaw)}</span>
-            ${showRef ? html`<span class="ref-price">${this._formatPrice(displayRefPrice!, displayCurrency, isRaw)}</span>` : nothing}
+            <span class="price">${formatPrice(price, locale)}</span>
+            ${showRef ? html`<span class="ref-price">${formatPrice(refPrice!, locale)}</span>` : nothing}
           </div>
           <span class="change" style="color:${trendColor}">
             <span class="arrow">${arrow}</span>${Math.abs(periodChange).toFixed(2)}%
@@ -746,24 +629,6 @@ export class EasyStockCard extends LitElement {
         />
       </svg>
     `;
-  }
-
-  private _formatPrice(price: number, currency: string, plain = false): string {
-    if (isNaN(price)) return "–";
-    const maxDigits = priceFractionDigits(price);
-    // RAW mode (or any non-ISO native code like "GBp"): show the value with the literal
-    // currency code rather than a localized symbol, so it stays unambiguous.
-    if (plain) return `${price.toFixed(maxDigits)} ${currency}`;
-    try {
-      return new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: maxDigits,
-      }).format(price);
-    } catch {
-      return `${price.toFixed(2)} ${currency}`;
-    }
   }
 
   static styles = css`
@@ -840,7 +705,7 @@ export class EasyStockCard extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .asset-ticker {
+    .asset-symbol {
       font-size: 0.7rem;
       color: var(--secondary-text-color);
       font-family: monospace;
@@ -897,18 +762,18 @@ export class EasyStockCard extends LitElement {
  * A bare customElements.define() throws NotSupportedError on the second
  * evaluation, which breaks the rest of this module. Swallowing that silently
  * is worse though: the *first* copy loaded wins, so a user with a stale
- * duplicate resource (e.g. a leftover /local/easy-stock-card.js from a manual
+ * duplicate resource (e.g. a leftover /local/zwitserleven-fondsen-card.js from a manual
  * install) keeps running the old card after upgrading, with nothing anywhere
  * to explain it. The warning names the copy that lost.
  */
 function defineOnce(tag: string, ctor: CustomElementConstructor): void {
   if (customElements.get(tag)) {
     console.warn(
-      `[easy-stock-card] <${tag}> is already registered by another copy of ` +
+      `${LOG_PREFIX} <${tag}> is already registered by another copy of ` +
         `this card, so this copy was ignored: ${import.meta.url}. The copy ` +
         `that loaded first wins, which may be an older build. Check Settings ` +
         `> Dashboards > three-dot menu > Resources for a duplicate entry ` +
-        `(a leftover /local/easy-stock-card.js is the usual cause) and ` +
+        `(a leftover /local/${CARD_TAG}.js is the usual cause) and ` +
         `remove it.`,
     );
     return;
@@ -916,15 +781,15 @@ function defineOnce(tag: string, ctor: CustomElementConstructor): void {
   customElements.define(tag, ctor);
 }
 
-defineOnce("easy-stock-card-editor", EasyStockCardEditor);
-defineOnce("easy-stock-card", EasyStockCard);
+defineOnce(EDITOR_TAG, ZwitserlevenFondsenCardEditor);
+defineOnce(CARD_TAG, ZwitserlevenFondsenCard);
 
 declare global {
   interface Window {
     customCards?: Array<{ type: string; name: string; description: string; preview?: boolean }>;
   }
   interface HTMLElementTagNameMap {
-    "easy-stock-card": EasyStockCard;
-    "easy-stock-card-editor": EasyStockCardEditor;
+    "zwitserleven-fondsen-card": ZwitserlevenFondsenCard;
+    "zwitserleven-fondsen-card-editor": ZwitserlevenFondsenCardEditor;
   }
 }

@@ -5,18 +5,18 @@
     "frontend"
   ],
   "codeowners": [
-    "@derspe"
+    "@ron-gc"
   ],
   "config_flow": true,
   "dependencies": [
     "http",
     "lovelace"
   ],
-  "documentation": "https://github.com/derspe/ha-easy-stock",
+  "documentation": "https://github.com/ron-gc/ha-easy-stock-zl",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/derspe/ha-easy-stock/issues",
+  "issue_tracker": "https://github.com/ron-gc/ha-easy-stock-zl/issues",
   "requirements": [
     "beautifulsoup4>=4.9.0"
   ],
-  "version": "0.6.0"
+  "version": "0.1.0"
 }
