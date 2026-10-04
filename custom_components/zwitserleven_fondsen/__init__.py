@@ -1,13 +1,13 @@
 import logging
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, CONF_SYMBOL, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-from .coordinator import ZwitserlevenDataCoordinator
-from .fondsen_page import get_page
+from .const import CONF_SYMBOL, DATA_COORDINATOR, DOMAIN
+from .coordinator import ZwitserlevenDataCoordinator, get_coordinator
 from .frontend import (
     CARD_URL_BASE,
     DATA_FRONTEND,
@@ -35,9 +35,10 @@ class ZwitserlevenHistoryView(HomeAssistantView):
         if not symbol:
             return self.json_message("symbol parameter required", status_code=400)
 
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.state is ConfigEntryState.LOADED and entry.runtime_data.symbol == symbol:
-                return self.json({"symbol": symbol, "history": entry.runtime_data.history})
+        coordinator = hass.data.get(DATA_COORDINATOR)
+        history = coordinator.history(symbol) if coordinator else None
+        if history is not None:
+            return self.json({"symbol": symbol, "history": history})
 
         return self.json_message(f"No sensor for symbol {symbol}", status_code=404)
 
@@ -91,19 +92,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZwitserlevenConfigEntry)
         await _async_register_card_safely(hass)
 
     symbol = entry.data[CONF_SYMBOL]
-    scan_interval = entry.options.get(
-        CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    )
-    store = _history_store(hass, symbol)
-    coordinator = ZwitserlevenDataCoordinator(
-        hass,
-        symbol=symbol,
-        update_interval=scan_interval,
-        store=store,
-        page=get_page(hass),
-    )
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = get_coordinator(hass)
+    await coordinator.async_add_fund(symbol, _history_store(hass, symbol))
+    # Refreshes for every fund; the page cache keeps the entries that set up
+    # together at startup down to one download.
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success or symbol not in coordinator.data:
+        coordinator.remove_fund(symbol)
+        raise ConfigEntryNotReady(
+            f"Fund {symbol} is not available on the Zwitserleven page"
+        ) from coordinator.last_exception
     entry.runtime_data = coordinator
+    entry.async_on_unload(lambda: coordinator.remove_fund(symbol))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

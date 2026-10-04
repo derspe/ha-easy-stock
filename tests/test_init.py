@@ -27,10 +27,16 @@ def _card_items(resources):
 
 
 def _mock_coordinator():
-    """Patch out the network-backed coordinator async_setup_entry builds."""
+    """Patch out the network-backed coordinator async_setup_entry uses."""
+    coordinator = MagicMock(
+        async_add_fund=AsyncMock(),
+        async_refresh=AsyncMock(),
+        last_update_success=True,
+        data={"LTAAF": {}, "LTAOB": {}},
+    )
     return patch(
-        "custom_components.zwitserleven_fondsen.ZwitserlevenDataCoordinator",
-        MagicMock(return_value=AsyncMock()),
+        "custom_components.zwitserleven_fondsen.get_coordinator",
+        return_value=coordinator,
     )
 
 

@@ -1,8 +1,8 @@
 """Fetch and parse the Zwitserleven fund overview page.
 
-All funds are published on a single page, so every configured fund reads from
-one shared FondsenPage. It keeps the parsed result for a short while, which
-turns the N requests that N coordinators polling in step would make into one.
+All funds are published on a single page. The coordinator and the config flow
+share one FondsenPage, which keeps the parsed result for a short while so the
+fund entries setting up together at startup cause a single download.
 """
 from __future__ import annotations
 
@@ -18,8 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DATA_PAGE, ZWITSERLEVEN_FONDSEN_URL
 
-# Long enough to cover a round of coordinators refreshing together, short
-# enough that a changed scan interval is not masked by the cache.
+# Long enough to cover the fund entries setting up together at startup.
 PAGE_CACHE_SECONDS = 60
 
 _HEADERS = {

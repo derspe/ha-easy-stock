@@ -10,8 +10,6 @@ from custom_components.zwitserleven_fondsen.const import (
     DOMAIN,
     CONF_SYMBOL,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
 )
 from custom_components.zwitserleven_fondsen.fondsen_page import FondsenPageError
 
@@ -74,14 +72,13 @@ async def test_config_flow_creates_entry(hass):
         result = await _init_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_SYMBOL: "LTAAF", CONF_NAME: "Aandelen", CONF_SCAN_INTERVAL: 900},
+            {CONF_SYMBOL: "LTAAF", CONF_NAME: "Aandelen"},
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Aandelen"
     assert result["data"][CONF_SYMBOL] == "LTAAF"
     assert result["data"][CONF_NAME] == "Aandelen"
-    assert result["data"][CONF_SCAN_INTERVAL] == 900
 
 
 async def test_title_defaults_to_the_fund_name(hass):
@@ -89,7 +86,7 @@ async def test_title_defaults_to_the_fund_name(hass):
         result = await _init_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_SYMBOL: "LTAAF", CONF_NAME: "", CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+            {CONF_SYMBOL: "LTAAF", CONF_NAME: ""},
         )
 
     assert result["title"] == "ASN Duurzaam Aandelenfonds"
@@ -101,7 +98,7 @@ async def test_unknown_fund_is_rejected(hass):
         with pytest.raises(InvalidData):
             await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                {CONF_SYMBOL: "NOPE", CONF_NAME: "", CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+                {CONF_SYMBOL: "NOPE", CONF_NAME: ""},
             )
 
 
@@ -141,7 +138,7 @@ async def test_options_flow_shows_form(hass):
     """Options flow init step shows a form pre-filled with current values."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SYMBOL: "LTAOB", CONF_NAME: "Obligaties", CONF_SCAN_INTERVAL: 900},
+        data={CONF_SYMBOL: "LTAOB", CONF_NAME: "Obligaties"},
         options={},
     )
     entry.add_to_hass(hass)
@@ -152,10 +149,10 @@ async def test_options_flow_shows_form(hass):
 
 
 async def test_options_flow_saves_new_values(hass):
-    """Submitting options form saves updated name and interval."""
+    """Submitting the options form saves the new name."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SYMBOL: "LTAOB", CONF_NAME: "Obligaties", CONF_SCAN_INTERVAL: 900},
+        data={CONF_SYMBOL: "LTAOB", CONF_NAME: "Obligaties"},
         options={},
     )
     entry.add_to_hass(hass)
@@ -163,9 +160,8 @@ async def test_options_flow_saves_new_values(hass):
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {CONF_NAME: "Obligatiefonds", CONF_SCAN_INTERVAL: 1800},
+        {CONF_NAME: "Obligatiefonds"},
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_NAME] == "Obligatiefonds"
-    assert entry.options[CONF_SCAN_INTERVAL] == 1800

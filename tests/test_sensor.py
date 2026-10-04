@@ -18,7 +18,11 @@ COORDINATOR_DATA = {
 
 
 def _sensor(data=COORDINATOR_DATA):
-    coordinator = SimpleNamespace(data=data, async_add_listener=lambda *a, **k: None)
+    coordinator = SimpleNamespace(
+        data=None if data is None else {SYMBOL: data},
+        last_update_success=True,
+        async_add_listener=lambda *a, **k: None,
+    )
     entry = SimpleNamespace(
         data={CONF_SYMBOL: SYMBOL, CONF_NAME: "Test Fund"},
         options={},

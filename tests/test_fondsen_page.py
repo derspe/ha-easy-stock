@@ -147,7 +147,7 @@ async def test_fetches_the_fund_page(hass):
 
 
 async def test_one_request_serves_every_fund(hass):
-    """Coordinators polling together share one download."""
+    """Entries setting up together at startup share one download."""
     patcher, session = _session(FONDSEN_HTML)
     page = FondsenPage(hass)
 

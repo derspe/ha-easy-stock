@@ -8,7 +8,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import DOMAIN, CONF_SYMBOL, CONF_NAME, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+from .const import DOMAIN, CONF_SYMBOL, CONF_NAME
 from .fondsen_page import FondsenPageError, get_page
 
 
@@ -37,7 +37,6 @@ class ZwitserlevenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_SYMBOL: symbol,
                     CONF_NAME: user_input.get(CONF_NAME, ""),
-                    CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
                 },
             )
 
@@ -56,9 +55,6 @@ class ZwitserlevenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
                 ),
                 vol.Optional(CONF_NAME, default=""): str,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-                    int, vol.Range(min=60, max=86400)
-                ),
             }
         )
 
@@ -77,17 +73,7 @@ class ZwitserlevenOptionsFlow(config_entries.OptionsFlow):
         current_name = self._config_entry.options.get(
             CONF_NAME, self._config_entry.data.get(CONF_NAME, "")
         )
-        current_interval = self._config_entry.options.get(
-            CONF_SCAN_INTERVAL, self._config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        )
 
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_NAME, default=current_name): str,
-                vol.Optional(CONF_SCAN_INTERVAL, default=current_interval): vol.All(
-                    int, vol.Range(min=60, max=86400)
-                ),
-            }
-        )
+        schema = vol.Schema({vol.Optional(CONF_NAME, default=current_name): str})
 
         return self.async_show_form(step_id="init", data_schema=schema)

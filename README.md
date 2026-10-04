@@ -13,7 +13,7 @@ a separate integration with its own domain (`zwitserleven_fondsen`), card
 - **All Zwitserleven funds** — prices are read from the public
   [Zwitserleven fund overview](https://www.zwitserleven.nl/over-zwitserleven/verantwoord-beleggen/fondsen/)
 - **Sensor entity per fund** — current price in EUR, daily change and the date of the price
-- **One request per poll** — all configured funds share a single download of the overview page
+- **One request per update** — a single download of the overview page updates every configured fund
 - **History recording** — works with the HA recorder out of the box (`SensorStateClass.MEASUREMENT`)
 - **Built-in Lovelace card** — auto-registered, no manual resource setup required
   - Sparkline charts for 5 time ranges: **1D · 1W · 1M · YTD · 1Y**
@@ -23,11 +23,13 @@ a separate integration with its own domain (`zwitserleven_fondsen`), card
   - **Click any tile** to open the HA sensor detail dialog
   - **Tile size** — choose S / M / L in the visual editor to control how many tiles fit per row
   - **Visual card editor** with drag & drop to reorder funds
-- **Configurable polling interval** — 60 s to 24 h (default: 1 h)
+- **Daily updates** — prices change at most once a day, so the page is checked when Home Assistant
+  starts and every evening at 20:00 UTC. A failed check is retried every hour until it succeeds.
+  To check right away, call the `homeassistant.update_entity` action on any fund sensor
 
 ## Requirements
 
-- Home Assistant 2024.7 or newer
+- Home Assistant 2025.1 or newer
 - Internet access (Zwitserleven website)
 
 ## Installation
@@ -106,7 +108,6 @@ Deleting a fund also deletes the daily prices stored for it.
 |---|---|
 | **Fund** | The fund to track, chosen from the funds currently listed on the Zwitserleven website |
 | **Name** | Display name shown in the card (optional — falls back to the fund name if left empty) |
-| **Update interval** | How often to poll the Zwitserleven website in seconds (60–86400, default 3600) |
 
 Repeat for each fund you want to track. Each fund becomes a device with one price sensor. Funds
 you have already added are left out of the list.

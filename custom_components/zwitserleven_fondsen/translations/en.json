@@ -6,13 +6,11 @@
         "description": "Choose the Zwitserleven fund to track.",
         "data": {
           "symbol": "Fund",
-          "name": "Display name (optional)",
-          "scan_interval": "Update interval (seconds)"
+          "name": "Display name (optional)"
         },
         "data_description": {
           "symbol": "Funds you have already added are not listed.",
-          "name": "Name for the fund's device and sensor. Leave empty to use the fund name from Zwitserleven.",
-          "scan_interval": "How often to check the Zwitserleven website. Prices change once a day, so an hour is plenty."
+          "name": "Name for the fund's device and sensor. Leave empty to use the fund name from Zwitserleven."
         }
       }
     },
@@ -27,12 +25,10 @@
       "init": {
         "title": "Fund options",
         "data": {
-          "name": "Display name (optional)",
-          "scan_interval": "Update interval (seconds)"
+          "name": "Display name (optional)"
         },
         "data_description": {
-          "name": "Name for the fund's device and sensor. Leave empty to use the fund name from Zwitserleven.",
-          "scan_interval": "How often to check the Zwitserleven website. Prices change once a day, so an hour is plenty."
+          "name": "Name for the fund's device and sensor. Leave empty to use the fund name from Zwitserleven."
         }
       }
     }

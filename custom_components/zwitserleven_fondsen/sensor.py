@@ -39,7 +39,7 @@ class ZwitserlevenSensor(CoordinatorEntity, SensorEntity):
         self, coordinator: ZwitserlevenDataCoordinator, entry: ZwitserlevenConfigEntry
     ) -> None:
         super().__init__(coordinator)
-        symbol = entry.data[CONF_SYMBOL]
+        symbol = self._symbol = entry.data[CONF_SYMBOL]
         self._attr_unique_id = f"zwitserleven_fondsen_{symbol}"
         name = (
             entry.options.get(CONF_NAME)
@@ -56,14 +56,22 @@ class ZwitserlevenSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
+    def _fund(self) -> dict | None:
+        return (self.coordinator.data or {}).get(self._symbol)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self._fund is not None
+
+    @property
     def native_value(self) -> float | None:
-        return self.coordinator.data["current_price"] if self.coordinator.data else None
+        return self._fund["current_price"] if self._fund else None
 
     @property
     def extra_state_attributes(self) -> dict:
-        if not self.coordinator.data:
+        d = self._fund
+        if not d:
             return {}
-        d = self.coordinator.data
         return {
             "symbol": d["symbol"],
             "long_name": d["long_name"],
