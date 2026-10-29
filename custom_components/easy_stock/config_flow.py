@@ -12,7 +12,7 @@ from .const import (
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
 )
-from .symbol_lookup import lookup_symbol
+from .listings import lookup_symbol
 from .isin import isin_checksum_valid, looks_like_isin, search_isin
 from .wkn import looks_like_wkn, search_wkn
 
@@ -23,6 +23,7 @@ class EasyStockConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         self._user_input: dict = {}
         self._candidates: list[dict] = []
+        self._incomplete = False
 
     @staticmethod
     @callback
@@ -53,24 +54,28 @@ class EasyStockConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _create_resolved_entry(self, symbol: str):
         """Create the entry for a listing an ISIN or WKN lookup found and already vetted.
 
-        Only the name is fetched; failing to get it is no reason to stop.
+        Vetting read the listing's chart, Yahoo's name included, so nothing is fetched.
         """
-        await self._abort_if_configured(symbol)
-        try:
-            yahoo_name = await lookup_symbol(symbol)
-            if yahoo_name is None:
-                return await self.async_step_select_listing(
-                    errors={CONF_SYMBOL: "symbol_not_found"}
-                )
-        except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
-            yahoo_name = ""
-        return await self._create_entry(symbol, yahoo_name)
+        listing = next(c for c in self._candidates if c["symbol"] == symbol)
+        return await self._create_entry(symbol, listing["name"])
+
+    async def _offer_listings(self):
+        """Create the entry for the one listing found, or let the user pick.
+
+        When some listings could not be checked, a single survivor is not taken on
+        trust: the one that failed may have been the user's own (XETRA dropped by a
+        429 would otherwise silently become London in pounds).
+        """
+        if len(self._candidates) == 1 and not self._incomplete:
+            return await self._create_resolved_entry(self._candidates[0]["symbol"])
+        return await self.async_step_select_listing()
 
     async def async_step_user(self, user_input: dict | None = None):
         errors = {}
 
         if user_input is not None:
             self._user_input = user_input
+            self._incomplete = False
             symbol = user_input[CONF_SYMBOL].upper().strip()
 
             if looks_like_isin(symbol):
@@ -84,12 +89,13 @@ class EasyStockConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
                         errors["base"] = "cannot_connect"
                     else:
-                        if not self._candidates:
-                            errors[CONF_SYMBOL] = "isin_not_found"
-                        elif len(self._candidates) == 1:
-                            return await self._create_resolved_entry(self._candidates[0]["symbol"])
+                        self._incomplete = getattr(self._candidates, "incomplete", False)
+                        if self._candidates:
+                            return await self._offer_listings()
+                        if self._incomplete:
+                            errors["base"] = "cannot_connect"
                         else:
-                            return await self.async_step_select_listing()
+                            errors[CONF_SYMBOL] = "isin_not_found"
             else:
                 # Six plain characters are a WKN -- or a short ticker. Whatever
                 # does not resolve is taken as the Yahoo symbol it was typed as.
@@ -102,10 +108,11 @@ class EasyStockConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
                         wkn_unreachable = True
-                if len(self._candidates) == 1:
-                    return await self._create_resolved_entry(self._candidates[0]["symbol"])
-                if len(self._candidates) > 1:
-                    return await self.async_step_select_listing()
+                    else:
+                        self._incomplete = getattr(self._candidates, "incomplete", False)
+                        wkn_unreachable = self._incomplete
+                if self._candidates:
+                    return await self._offer_listings()
 
                 # Nothing resolved: it has to be a Yahoo symbol, so ask Yahoo whether
                 # it is one. Creating an entry for a typo gave a sensor that never
@@ -140,9 +147,7 @@ class EasyStockConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_select_listing(
-        self, user_input: dict | None = None, *, errors: dict | None = None
-    ):
+    async def async_step_select_listing(self, user_input: dict | None = None):
         if user_input is not None:
             return await self._create_resolved_entry(user_input[CONF_SYMBOL])
 
@@ -157,7 +162,7 @@ class EasyStockConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select_listing",
-            errors=errors or {},
+            errors={"base": "listings_incomplete"} if self._incomplete else {},
             data_schema=vol.Schema({vol.Required(CONF_SYMBOL, default=default): vol.In(options)}),
         )
 

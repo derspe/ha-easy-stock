@@ -147,10 +147,12 @@ The first field also takes an ISIN or a WKN, so you do not need to know the Yaho
 | WKN (6 characters) | `A1JX52` | Vanguard FTSE All-World |
 
 - Easy Stock looks up where the security trades through [OpenFIGI](https://www.openfigi.com) and checks every listing against Yahoo Finance. Listings without a usable history (a single day of data, or no trade for weeks) are left out.
-- If it trades on several exchanges, you pick the listing in a second step. Listings in your Home Assistant currency and on your country's home exchange come first and the first one is preselected — XETRA in EUR for a German setup, London in GBP for a UK one.
+- If it trades on several exchanges, you pick the listing in a second step. Listings in your Home Assistant currency and on your country's home exchange come first and the first one is preselected — XETRA in EUR for a German setup, London in GBP for a UK one. If some exchanges did not answer, you always get this step, with a note that the list may be incomplete.
 - If OpenFIGI does not answer, an ISIN falls back to Yahoo's own search.
 - Input that no lookup resolves is treated as a Yahoo ticker. If Yahoo does not know it either, the form shows an error instead of creating a sensor that never gets a price.
 - Only the resolved ticker is stored, so currency and exchange follow the listing you chose.
+
+![Select listing](https://raw.githubusercontent.com/derspe/ha-easy-stock/main/assets/screenshot-listing.png)
 
 > **Privacy:** the ISIN or WKN you type is sent to OpenFIGI (a free identifier service by Bloomberg) for the lookup — nothing else is.
 

@@ -25,7 +25,8 @@
       "invalid_isin": "This is not a valid ISIN (checksum mismatch).",
       "isin_not_found": "No listing found for this ISIN on Yahoo Finance.",
       "cannot_connect": "Could not reach Yahoo Finance or OpenFIGI. Try again in a moment.",
-      "symbol_not_found": "Yahoo Finance does not know this symbol, and no ISIN or WKN was found for it either."
+      "symbol_not_found": "Yahoo Finance does not know this symbol, and no ISIN or WKN was found for it either.",
+      "listings_incomplete": "Some exchanges did not answer, so this list may be incomplete. Pick a listing, or close this dialog and try again in a moment."
     }
   }
 }

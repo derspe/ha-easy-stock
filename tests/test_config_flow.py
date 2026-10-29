@@ -349,16 +349,19 @@ async def test_no_long_name_keeps_the_symbol_as_the_title(hass):
     assert result["data"][CONF_NAME] == ""
 
 
-async def test_the_listing_picked_from_an_isin_is_named_too(hass, yahoo_lookup):
-    yahoo_lookup.return_value = "iShares Core MSCI World UCITS ETF"
-    listings = [_listing("EUNL.DE", "XETRA"), _listing("IWDA.L", "London")]
+async def test_the_listing_picked_from_an_isin_is_named_without_asking_yahoo_again(hass, yahoo_lookup):
+    """Vetting already read each listing's chart, Yahoo's name included."""
+    listings = [
+        _listing("EUNL.DE", "XETRA", "iShares Core MSCI World UCITS ETF EUR"),
+        _listing("IWDA.L", "London", "iShares Core MSCI World UCITS ETF"),
+    ]
     with _search_patch(listings), _SETUP_PATCHES[0], _SETUP_PATCHES[1]:
         result = await _submit(hass, IWDA_ISIN)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_SYMBOL: "IWDA.L"}
         )
 
-    yahoo_lookup.assert_awaited_once_with("IWDA.L")
+    yahoo_lookup.assert_not_awaited()
     assert result["title"] == "iShares Core MSCI World UCITS ETF"
 
 
@@ -454,14 +457,11 @@ async def test_a_symbol_without_a_yahoo_name_is_still_accepted(hass, yahoo_looku
     assert result["title"] == "SOMETHING.DE"
 
 
-async def test_a_resolved_listing_is_not_blocked_when_its_name_cannot_be_fetched(hass, yahoo_lookup):
-    """ISIN/WKN lookups already vetted the listing; a missing name only costs the nicer title."""
-    import aiohttp
-
-    yahoo_lookup.side_effect = aiohttp.ClientError("429")
+async def test_a_resolved_listing_without_a_name_keeps_the_symbol_as_the_title(hass, yahoo_lookup):
     with _search_patch([_listing("AAPL", "NASDAQ")]), _SETUP_PATCHES[0], _SETUP_PATCHES[1]:
         result = await _submit(hass, "US0378331005")
 
+    yahoo_lookup.assert_not_awaited()
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "AAPL"
 
@@ -530,18 +530,61 @@ async def test_wkn_listing_picker_shows_the_currency(hass):
     assert options["VGWL.DE"] == "VGWL.DE · XETRA · EUR · VANG"
 
 
-async def test_a_disappeared_listing_is_not_created_and_can_be_reselected(hass, yahoo_lookup):
-    yahoo_lookup.return_value = None
+def _incomplete(*listings):
+    """What the lookups return when some chart requests failed."""
+    from custom_components.easy_stock.listings import Listings
+
+    result = Listings(listings)
+    result.incomplete = True
+    return result
+
+
+async def test_a_lone_survivor_of_failed_requests_is_offered_not_created(hass):
+    """XETRA dropped by a 429 must not silently turn into London in pounds."""
+    with _search_patch(_incomplete(_listing("IWDA.L", "London"))), \
+            _SETUP_PATCHES[0], _SETUP_PATCHES[1]:
+        result = await _submit(hass, IWDA_ISIN)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "select_listing"
+        assert result["errors"] == {"base": "listings_incomplete"}
+        assert hass.config_entries.async_entries(DOMAIN) == []
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_SYMBOL: "IWDA.L"}
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SYMBOL] == "IWDA.L"
+
+
+async def test_a_complete_picker_shows_no_warning(hass):
     with _search_patch([_listing("EUNL.DE", "XETRA"), _listing("IWDA.L", "London")]):
         result = await _submit(hass, IWDA_ISIN)
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_SYMBOL: "EUNL.DE"})
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_SYMBOL: "symbol_not_found"}
-    assert hass.config_entries.async_entries(DOMAIN) == []
-    yahoo_lookup.return_value = "World ETF"
-    with _SETUP_PATCHES[0], _SETUP_PATCHES[1]:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_SYMBOL: "IWDA.L"})
-    assert result["data"][CONF_SYMBOL] == "IWDA.L"
+
+    assert result["errors"] == {}
+
+
+async def test_an_isin_whose_listings_all_went_unchecked_is_not_called_unknown(hass):
+    with _search_patch(_incomplete()):
+        result = await _submit(hass, SAP_ISIN)
+
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_a_wkn_lone_survivor_is_offered_too(hass):
+    with _wkn_patch(_incomplete(_listing("VWRL.L", "London"))):
+        result = await _submit(hass, "A1JX52")
+
+    assert result["step_id"] == "select_listing"
+    assert result["errors"] == {"base": "listings_incomplete"}
+
+
+async def test_a_wkn_whose_listings_went_unchecked_is_not_blamed_on_the_symbol(hass, yahoo_lookup):
+    yahoo_lookup.return_value = None
+    with _wkn_patch(_incomplete()):
+        result = await _submit(hass, "A1JX52")
+
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_wkn_chart_outage_is_reported_as_cannot_connect(hass, yahoo_lookup):

@@ -144,3 +144,18 @@ async def test_empty_fallback_does_not_hide_an_openfigi_outage():
     with patch.object(isin, "find_listings", side_effect=aiohttp.ClientError("down")), \
             patch.object(isin, "_search_yahoo", return_value=[]), pytest.raises(aiohttp.ClientError):
         await isin.search_isin("US0378331005")
+
+
+async def test_unchecked_openfigi_listings_are_not_turned_into_not_found():
+    """OpenFIGI found listings whose charts failed; Yahoo's search finding none is no verdict."""
+    from unittest.mock import patch
+    from custom_components.easy_stock.listings import Listings
+
+    unchecked = Listings()
+    unchecked.incomplete = True
+    with patch.object(isin, "find_listings", return_value=unchecked), \
+            patch.object(isin, "_search_yahoo", return_value=Listings()):
+        result = await isin.search_isin("DE0007164600")
+
+    assert result == []
+    assert result.incomplete is True

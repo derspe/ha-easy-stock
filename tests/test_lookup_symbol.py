@@ -1,8 +1,8 @@
-"""Unit tests for the Yahoo symbol lookup the setup form validates a symbol with."""
+"""Unit tests for the Yahoo symbol lookup the setup form validates a plain symbol with."""
 import aiohttp
 import pytest
 
-from custom_components.easy_stock.symbol_lookup import lookup_symbol
+from custom_components.easy_stock.listings import lookup_symbol
 from tests.conftest import mock_http
 
 

@@ -4,21 +4,13 @@ import re
 
 import aiohttp
 
-from .const import YAHOO_SEARCH_URL
+from .const import HEADERS, YAHOO_SEARCH_URL
 from .listings import vet_listings
 from .openfigi import find_listings
 
 _LOGGER = logging.getLogger(__name__)
 
 _ISIN_RE = re.compile(r"^[A-Z]{2}[A-Z0-9]{9}[0-9]$")
-
-_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
 
 
 def looks_like_isin(value: str) -> bool:
@@ -48,22 +40,27 @@ async def search_isin(isin: str, currency: str = "", country: str | None = None)
     Raises aiohttp.ClientError on network trouble and ValueError on a bad payload.
     """
     lookup_error = None
+    figi_listings = None
     try:
-        listings = await find_listings("ID_ISIN", isin, currency, country)
-        if listings:
-            return listings
+        figi_listings = await find_listings("ID_ISIN", isin, currency, country)
+        if figi_listings:
+            return figi_listings
     except (aiohttp.ClientError, asyncio.TimeoutError, ValueError) as err:
         lookup_error = err
         _LOGGER.debug("easy_stock: OpenFIGI lookup of %s failed (%s), asking Yahoo", isin, err)
 
     listings = await _search_yahoo(isin, currency, country)
-    if not listings and lookup_error is not None:
-        raise lookup_error
+    if not listings:
+        if lookup_error is not None:
+            raise lookup_error
+        if figi_listings is not None and figi_listings.incomplete:
+            # OpenFIGI's listings went unchecked, so "not found" would be a guess.
+            return figi_listings
     return listings
 
 
 async def _search_yahoo(isin: str, currency: str, country: str | None) -> list[dict]:
-    async with aiohttp.ClientSession(headers=_HEADERS) as session:
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
         async with session.get(
             YAHOO_SEARCH_URL.format(query=isin),
             timeout=aiohttp.ClientTimeout(total=15),

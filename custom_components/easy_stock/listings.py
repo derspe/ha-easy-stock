@@ -4,15 +4,7 @@ from typing import NamedTuple
 
 import aiohttp
 
-from .const import YAHOO_CHART_URL
-
-_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
+from .const import HEADERS, YAHOO_CHART_URL
 
 # A listing is only worth offering when it trades and has a history to chart. Yahoo
 # answers for plenty of symbols that do neither: the German regional exchanges come
@@ -49,11 +41,22 @@ class ChartStats(NamedTuple):
     last_trade: int
     currency: str
     exchange: str = ""
+    name: str = ""
+
+
+class Listings(list):
+    """The vetted listings, plus whether some of them could not be checked.
+
+    `incomplete` is set when a chart request failed: that listing is missing from
+    the list, and it may well have been the one the user wanted.
+    """
+
+    incomplete: bool = False
 
 
 async def chart_stats(symbol: str) -> ChartStats | None:
     """Read chart metadata; only a missing chart is None, outages raise."""
-    async with aiohttp.ClientSession(headers=_HEADERS) as session:
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
         async with session.get(
             YAHOO_CHART_URL.format(symbol=symbol),
             timeout=aiohttp.ClientTimeout(total=15),
@@ -70,28 +73,45 @@ async def chart_stats(symbol: str) -> ChartStats | None:
         if not chart["result"]:
             return None
         result = chart["result"][0]
-        closes = [c for c in result["indicators"]["quote"][0].get("close", []) if c is not None]
         meta = result["meta"]
+        # A symbol listed only days ago can come without any quotes yet.
+        quote = ((result.get("indicators") or {}).get("quote") or [{}])[0]
+        closes = [c for c in quote.get("close") or [] if c is not None]
         return ChartStats(
             len(closes), int(meta.get("regularMarketTime") or 0),
             meta.get("currency") or "", meta.get("fullExchangeName") or meta.get("exchangeName") or "",
+            " ".join((meta.get("longName") or meta.get("shortName") or "").split()),
         )
     except (KeyError, IndexError, TypeError, AttributeError) as err:
         raise ValueError(f"Unexpected Yahoo chart payload: {err}") from err
+
+
+async def lookup_symbol(symbol: str) -> str | None:
+    """Ask Yahoo whether a symbol exists, and what it calls it.
+
+    Returns Yahoo's name for it ("Vanguard FTSE All-World UCITS ETF", "" when it has
+    none), or None when Yahoo does not know the symbol. An unknown symbol is told
+    apart from an outage on purpose: only the first says the user mistyped. Raises
+    aiohttp.ClientError when Yahoo cannot be reached and ValueError on a bad answer.
+    """
+    stats = await chart_stats(symbol)
+    return None if stats is None else stats.name
 
 
 async def vet_listings(
     candidates: list[dict],
     currency: str = "",
     country: str | None = None,
-) -> list[dict]:
+) -> Listings:
     """Keep the listings that trade and carry a history, the user's own first.
 
-    Each kept listing gains a "currency". Listings in the user's currency lead, and
-    within those the ones on the home exchange of their country; `currency` and
-    `country` are Home Assistant's own settings. A listing whose request failed (Yahoo
+    Each kept listing gains a "currency", and Yahoo's name in place of the caller's
+    when Yahoo has one (OpenFIGI abbreviates: "VANG FTSE AW USDD"). Listings in the
+    user's currency lead, and within those the ones on the home exchange of their
+    country; `currency` and `country` are Home Assistant's own settings. A listing whose request failed (Yahoo
     answers bursts with the odd 429) is dropped; only when every request failed is it
-    an outage, which raises instead of passing for a "not found" result.
+    an outage, which raises instead of passing for a "not found" result; otherwise the
+    result is marked `incomplete`.
     """
     stats = await asyncio.gather(
         *(chart_stats(c["symbol"]) for c in candidates), return_exceptions=True
@@ -101,9 +121,16 @@ async def vet_listings(
         raise failures[0]
     now = time.time()
     kept = [
-        {**c, "currency": st.currency, "exchange": st.exchange or c["exchange"]}
+        {
+            **c,
+            "currency": st.currency,
+            "exchange": st.exchange or c["exchange"],
+            "name": st.name or c["name"],
+        }
         for c, st in zip(candidates, stats)
-        if st is not None and not isinstance(st, BaseException) and st.closes >= MIN_POINTS and now - st.last_trade <= MAX_QUOTE_AGE
+        if isinstance(st, ChartStats)
+        and st.closes >= MIN_POINTS
+        and now - st.last_trade <= MAX_QUOTE_AGE
     ]
 
     home = HOME_SUFFIX.get(country or "")
@@ -116,4 +143,6 @@ async def vet_listings(
         )
 
     # sorted() is stable: within a group the order the caller gave stays.
-    return sorted(kept, key=rank)
+    result = Listings(sorted(kept, key=rank))
+    result.incomplete = bool(failures)
+    return result

@@ -1,15 +1,7 @@
 import aiohttp
 
-from .const import OPENFIGI_URL
+from .const import HEADERS, OPENFIGI_URL
 from .listings import vet_listings
-
-_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
 
 # OpenFIGI exchange code -> (Yahoo ticker suffix, label shown in the picker).
 # OpenFIGI lists every venue and currency line a security trades on; only the
@@ -42,7 +34,7 @@ _EXCHANGES = {
 
 async def _figi_lookup(id_type: str, value: str) -> list[dict]:
     """Every listing OpenFIGI knows for an identifier (ID_ISIN, ID_WERTPAPIER = WKN). Raises aiohttp.ClientError / ValueError."""
-    async with aiohttp.ClientSession(headers=_HEADERS) as session:
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
         async with session.post(
             OPENFIGI_URL,
             json=[{"idType": id_type, "idValue": value}],
