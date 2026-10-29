@@ -20,3 +20,10 @@ YAHOO_CHART_URL_INTRADAY = (
     "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
     "?range=5d&interval=1h&includePrePost=false"
 )
+
+YAHOO_SEARCH_URL = (
+    "https://query1.finance.yahoo.com/v1/finance/search"
+    "?q={query}&quotesCount=10&newsCount=0"
+)
+
+OPENFIGI_URL = "https://api.openfigi.com/v3/mapping"

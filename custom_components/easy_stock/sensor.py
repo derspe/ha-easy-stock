@@ -27,6 +27,12 @@ class StockSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = name.strip()
 
     @property
+    def suggested_object_id(self) -> str | None:
+        # The name can be a long Yahoo name; the entity id stays the symbol's
+        # (sensor.vgwl_de), short and the same for every listing of a name.
+        return self._entry.data[CONF_SYMBOL]
+
+    @property
     def native_value(self) -> float | None:
         return self.coordinator.data["current_price"] if self.coordinator.data else None
 

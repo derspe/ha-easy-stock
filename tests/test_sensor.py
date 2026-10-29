@@ -43,3 +43,39 @@ def test_exposes_market_state_and_price_is_live_independently():
 
 def test_returns_no_attributes_without_coordinator_data():
     assert _sensor(data=None).extra_state_attributes == {}
+
+
+def test_suggests_the_symbol_as_the_object_id():
+    assert _sensor().suggested_object_id == SYMBOL
+
+
+async def test_a_long_name_does_not_make_a_long_entity_id(hass):
+    """The name is Yahoo's long one; the entity id stays the symbol's (sensor.vgwl_de)."""
+    from unittest.mock import patch
+
+    from homeassistant.helpers import entity_registry as er
+    from homeassistant.setup import async_setup_component
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    from custom_components.easy_stock.const import DOMAIN
+
+    from .conftest import make_store, make_yahoo_payload, mock_http
+
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, "lovelace", {})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SYMBOL: "VGWL.DE", CONF_NAME: "Vanguard FTSE All-World UCITS ETF", "scan_interval": 900},
+        title="Vanguard FTSE All-World UCITS ETF",
+    )
+    entry.add_to_hass(hass)
+
+    patcher, _ = mock_http(make_yahoo_payload())
+    with patcher, patch("custom_components.easy_stock.Store", return_value=make_store()):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    sensor = registry.async_get("sensor.vgwl_de")
+    assert sensor is not None, [e.entity_id for e in registry.entities.values()]
+    assert hass.states.get("sensor.vgwl_de").name == "Vanguard FTSE All-World UCITS ETF"

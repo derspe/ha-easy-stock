@@ -3,16 +3,29 @@
     "step": {
       "user": {
         "title": "Add Stock",
-        "description": "Enter the Yahoo Finance symbol (e.g. SAP.DE, AAPL, BTC-USD)",
+        "description": "Enter the Yahoo Finance symbol (e.g. SAP.DE, AAPL, BTC-USD), an ISIN (e.g. DE0007164600) or a WKN (e.g. A1JX52)",
         "data": {
-          "symbol": "Symbol",
+          "symbol": "Symbol, ISIN or WKN",
           "name": "Display name (optional)",
           "scan_interval": "Update interval (seconds)"
+        }
+      },
+      "select_listing": {
+        "title": "Select listing",
+        "description": "This security is traded on several exchanges. Pick the listing to track.",
+        "data": {
+          "symbol": "Listing"
         }
       }
     },
     "abort": {
       "already_configured": "This symbol is already configured."
+    },
+    "error": {
+      "invalid_isin": "This is not a valid ISIN (checksum mismatch).",
+      "isin_not_found": "No listing found for this ISIN on Yahoo Finance.",
+      "cannot_connect": "Could not reach Yahoo Finance or OpenFIGI. Try again in a moment.",
+      "symbol_not_found": "Yahoo Finance does not know this symbol, and no ISIN or WKN was found for it either."
     }
   }
 }
