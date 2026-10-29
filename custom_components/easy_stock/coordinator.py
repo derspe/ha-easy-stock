@@ -6,20 +6,12 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import YAHOO_CHART_URL, YAHOO_CHART_URL_MINI, YAHOO_CHART_URL_INTRADAY
+from .const import HEADERS, YAHOO_CHART_URL, YAHOO_CHART_URL_MINI, YAHOO_CHART_URL_INTRADAY
 from .market_state import derive_market_state, last_trade_date
 from .intraday import traded_on
 from .precision import price_decimals, round_price
 
 _LOGGER = logging.getLogger(__name__)
-
-_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
 
 
 class StockDataCoordinator(DataUpdateCoordinator):
@@ -64,7 +56,7 @@ class StockDataCoordinator(DataUpdateCoordinator):
         )
 
         try:
-            async with aiohttp.ClientSession(headers=_HEADERS) as session:
+            async with aiohttp.ClientSession(headers=HEADERS) as session:
                 async with session.get(
                     url, timeout=aiohttp.ClientTimeout(total=15)
                 ) as resp:
@@ -81,7 +73,7 @@ class StockDataCoordinator(DataUpdateCoordinator):
         # the sensor unavailable, so the older signals stand in for that update.
         intraday_today = None
         try:
-            async with aiohttp.ClientSession(headers=_HEADERS) as session:
+            async with aiohttp.ClientSession(headers=HEADERS) as session:
                 async with session.get(
                     YAHOO_CHART_URL_INTRADAY.format(symbol=self.symbol),
                     timeout=aiohttp.ClientTimeout(total=15),

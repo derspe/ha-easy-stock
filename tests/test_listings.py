@@ -43,6 +43,28 @@ async def test_drops_a_dead_listing_with_a_stale_last_trade():
     assert result == []
 
 
+async def test_takes_yahoos_name_over_the_callers():
+    """OpenFIGI abbreviates ("VANG FTSE AW USDD"); the picker shows Yahoo's name."""
+    result = await _vet(
+        [_listing("VGWL.DE", "XETRA", "VANG FTSE AW USDD")],
+        {"VGWL.DE": (250, FRESH, "EUR", "XETRA", "Vanguard FTSE All-World UCITS ETF")},
+    )
+
+    assert result[0]["name"] == "Vanguard FTSE All-World UCITS ETF"
+
+
+async def test_keeps_the_callers_name_when_yahoo_has_none():
+    result = await _vet([_listing("A.DE", "XETRA", "SOME AG")], {"A.DE": (250, FRESH, "EUR")})
+
+    assert result[0]["name"] == "SOME AG"
+
+
+async def test_a_full_answer_is_complete():
+    result = await _vet([_listing("A.DE")], {"A.DE": (250, FRESH, "EUR")})
+
+    assert result.incomplete is False
+
+
 async def test_drops_a_listing_without_a_chart():
     assert await _vet([_listing("A.XX")], {}) == []
 
@@ -124,6 +146,20 @@ async def test_chart_stats_counts_the_closes_and_reads_time_and_currency():
         assert await listings.chart_stats("VWRL.L") == listings.ChartStats(3, FRESH, "GBp")
 
 
+async def test_chart_stats_reads_the_name():
+    payload = _chart([1.0])
+    payload["chart"]["result"][0]["meta"].update(longName="  Vanguard FTSE\nAll-World ", shortName="VANG")
+    patcher, _ = mock_http(payload)
+    with patcher:
+        assert (await listings.chart_stats("VGWL.DE")).name == "Vanguard FTSE All-World"
+
+
+async def test_chart_stats_takes_a_chart_without_quotes_yet():
+    patcher, _ = mock_http({"chart": {"result": [{"meta": {"currency": "EUR"}}]}})
+    with patcher:
+        assert (await listings.chart_stats("NEW.DE")).closes == 0
+
+
 async def test_chart_stats_asks_for_the_year():
     patcher, session = mock_http(_chart([1.0]))
     with patcher:
@@ -185,6 +221,8 @@ async def test_a_failed_request_drops_only_that_listing():
 
     # The three that answered stay, in the usual order: euro lines before pounds.
     assert [r["symbol"] for r in result] == ["VWRL.AS", "VWRL.MI", "VWRL.L"]
+    # ... and the caller learns that the list has a gap.
+    assert result.incomplete is True
 
 
 async def test_every_request_failing_is_an_outage():
