@@ -37,7 +37,17 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
 
 ## Installation
 
-### Via HACS (recommended)
+### Via the Marketplace (Home Assistant 2026.11 or newer, recommended)
+
+1. Go to **Settings → Marketplace**
+2. Search for **Easy Stock**
+3. Click **Download**
+4. Restart Home Assistant if you are asked to
+
+### Via HACS (Home Assistant 2026.10 or older)
+
+> HACS became the built-in Marketplace in Home Assistant 2026.11. Existing HACS installs are
+> moved over automatically when you update — nothing to reinstall.
 
 1. Open **HACS** in your Home Assistant sidebar
 2. Search for **Easy Stock**
@@ -226,9 +236,9 @@ entities:
 
 **An Easy Stock resource is left over after uninstalling**
 - Removing the integration under **Settings → Devices & Services** also removes its dashboard
-  resource. Uninstalling through HACS without removing the integration first cannot do that, so
-  a resource pointing at `/easy_stock/easy-stock-card.js` stays behind and 404s on every page
-  load. Delete it under **Settings → Dashboards → ⋮ → Resources**
+  resource. Uninstalling through the Marketplace (or HACS) without removing the integration first
+  cannot do that, so a resource pointing at `/easy_stock/easy-stock-card.js` stays behind and 404s
+  on every page load. Delete it under **Settings → Dashboards → ⋮ → Resources**
 
 **No data / sensor unavailable**
 - Verify the ticker symbol is correct on [finance.yahoo.com](https://finance.yahoo.com)

@@ -49,7 +49,7 @@ body:
     id: integration_version
     attributes:
       label: Easy Stock version
-      description: Found in HACS or Settings → Devices & Services → Easy Stock
+      description: Found in the Marketplace (HACS on 2026.10 and older) or Settings → Devices & Services → Easy Stock
       placeholder: "0.1.0"
     validations:
       required: true
