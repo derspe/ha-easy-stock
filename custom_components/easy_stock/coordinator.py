@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import aiohttp
 from homeassistant.helpers.storage import Store
@@ -94,6 +95,11 @@ class StockDataCoordinator(DataUpdateCoordinator):
         try:
             result = data["chart"]["result"][0]
             meta = result["meta"]
+            
+            exchange_tz = ZoneInfo(
+                meta.get("exchangeTimezoneName") or "UTC"
+            )
+            
             timestamps = result.get("timestamp", [])
             closes = result["indicators"]["quote"][0].get("close", [])
 
@@ -101,7 +107,7 @@ class StockDataCoordinator(DataUpdateCoordinator):
             fetched: list[list] = []
             for ts, c in zip(timestamps, closes):
                 if ts is not None and c is not None:
-                    date_str = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
+                    date_str = datetime.fromtimestamp(ts, tz=exchange_tz).strftime("%Y-%m-%d")
                     fetched.append([date_str, round_price(c)])
 
             # Update persistent history
@@ -133,7 +139,7 @@ class StockDataCoordinator(DataUpdateCoordinator):
             # UTC midnight belong to the previous session: east of Greenwich the
             # first hours of a Saturday still counted as Friday, and Yahoo's
             # post-close revisions were written into the weekend chart (#17).
-            today_str = dt_util.now().strftime("%Y-%m-%d")
+            today_str = datetime.now(exchange_tz).strftime("%Y-%m-%d")
             meta_price = meta.get("regularMarketPrice") or 0
 
             # traded_today: the asset produced a price today, so an intraday view
