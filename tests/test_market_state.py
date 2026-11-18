@@ -7,7 +7,11 @@ which still carries the pre/regular/post epoch windows.
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-from custom_components.easy_stock.market_state import derive_market_state, last_trade_date
+from custom_components.easy_stock.market_state import (
+    derive_market_state,
+    exchange_timezone,
+    last_trade_date,
+)
 
 
 def _meta(pre=None, regular=None, post=None, **extra):
@@ -187,3 +191,19 @@ def test_an_exchange_with_real_opening_hours_is_left_to_its_windows():
     now = 1792354900
     meta = _meta(regular=(now - 3600, now + 3600))
     assert derive_market_state(meta, now=now, traded_today=False) == "REGULAR"
+
+
+# ---------------------------------------------------------------------------
+# The trading date belongs to the exchange, not to the user (#17, Asia/Tokyo)
+# ---------------------------------------------------------------------------
+
+
+def test_exchange_timezone_reads_the_name_yahoo_ships():
+    assert exchange_timezone({"exchangeTimezoneName": "America/New_York"}) == ZoneInfo("America/New_York")
+
+
+def test_exchange_timezone_falls_back_to_utc_when_there_is_none():
+    assert exchange_timezone({}) == timezone.utc
+    assert exchange_timezone({"exchangeTimezoneName": ""}) == timezone.utc
+    assert exchange_timezone({"exchangeTimezoneName": "Nowhere/Nothing"}) == timezone.utc
+    assert exchange_timezone({"exchangeTimezoneName": 42}) == timezone.utc

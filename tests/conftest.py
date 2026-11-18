@@ -41,7 +41,7 @@ def make_trading_period(open_now=True, now=None):
 
 
 def make_yahoo_payload(days_prices=None, meta_price=None, trading_period=_DEFAULT_PERIOD,
-                       market_time=None):
+                       market_time=None, exchange_tz=None, session_hour_utc=0):
     """Build a minimal Yahoo Finance chart API response.
 
     Mirrors the live v8 chart API: it carries currentTradingPeriod and no
@@ -55,7 +55,11 @@ def make_yahoo_payload(days_prices=None, meta_price=None, trading_period=_DEFAUL
     timestamps = []
     closes = []
     for date_str, price in days_prices:
-        dt = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        # session_hour_utc places the candle where the exchange actually opens, so
+        # its date in the exchange's timezone is the date asked for here.
+        dt = datetime.strptime(date_str, "%Y-%m-%d").replace(
+            tzinfo=timezone.utc, hour=session_hour_utc
+        )
         timestamps.append(int(dt.timestamp()))
         closes.append(price)
     last_close = closes[-1]
@@ -68,6 +72,8 @@ def make_yahoo_payload(days_prices=None, meta_price=None, trading_period=_DEFAUL
         "previousClose": prev_close,
         "chartPreviousClose": prev_close,
     }
+    if exchange_tz is not None:
+        meta["exchangeTimezoneName"] = exchange_tz
     if market_time is not None:
         meta["regularMarketTime"] = market_time
     if trading_period is not None:
