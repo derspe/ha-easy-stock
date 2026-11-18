@@ -747,3 +747,118 @@ async def test_a_saturday_candle_does_not_outvote_the_missing_bars(hass, freezer
         data = await coord._async_update_data()
 
     assert data["traded_today"] is False
+
+
+# ---------------------------------------------------------------------------
+# The trading date belongs to the exchange, not to the user (#17, Asia/Tokyo)
+# ---------------------------------------------------------------------------
+
+# 19.11.2026, 02:00 in Tokyo — which is still the 18th in New York and in London.
+TOKYO_AFTER_MIDNIGHT = "2026-11-18T17:00:00+00:00"
+
+
+async def test_a_us_index_after_tokyo_midnight_keeps_its_real_previous_close(hass, freezer):
+    """Reported from a UTC+9 install on v0.5.1: change drops to zero at 00:00 JST.
+
+    Candles were dated in UTC while "today" came from the Home Assistant
+    timezone. In Tokyo those differ from 00:00 to 08:59, so the running US
+    session no longer matched "today", and its own candle — the session in
+    progress — was taken as the previous close. The change then collapses to
+    zero while the market is open.
+    """
+    await hass.config.async_set_time_zone("Asia/Tokyo")
+    freezer.move_to(TOKYO_AFTER_MIDNIGHT)
+
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(
+        make_yahoo_payload(
+            days_prices=[("2026-11-17", 24328.38), ("2026-11-18", 24309.05)],
+            meta_price=24309.05,  # the running candle tracks the quote
+            exchange_tz="America/New_York",
+            session_hour_utc=14,  # 09:00 in New York
+            trading_period=make_trading_period(open_now=True),
+        ),
+        hourly_payload=make_hourly_payload(
+            [(datetime(2026, 11, 18, 16, 0, tzinfo=timezone.utc), 24309.05)]  # 01:00 JST
+        ),
+    )
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["previous_close"] == pytest.approx(24328.38)  # the session before, not itself
+    assert data["change"] != 0
+
+
+async def test_a_currency_pair_after_tokyo_midnight_keeps_its_real_previous_close(hass, freezer):
+    """Same install reported USD/JPY recovering only after 09:00 JST."""
+    await hass.config.async_set_time_zone("Asia/Tokyo")
+    freezer.move_to(TOKYO_AFTER_MIDNIGHT)
+
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(
+        make_yahoo_payload(
+            days_prices=[("2026-11-17", 159.52), ("2026-11-18", 159.27)],
+            meta_price=159.27,
+            exchange_tz="Europe/London",
+            trading_period=make_trading_period(open_now=True),
+        ),
+        hourly_payload=make_hourly_payload(
+            [(datetime(2026, 11, 18, 16, 0, tzinfo=timezone.utc), 159.27)]
+        ),
+    )
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["previous_close"] == pytest.approx(159.52)
+
+
+async def test_a_tokyo_index_is_unaffected_for_a_tokyo_user(hass, freezer):
+    """The reporter's control case: the Nikkei behaved correctly throughout."""
+    await hass.config.async_set_time_zone("Asia/Tokyo")
+    freezer.move_to(TOKYO_AFTER_MIDNIGHT)
+
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(
+        make_yahoo_payload(
+            days_prices=[("2026-11-17", 58860.43), ("2026-11-18", 59100.00)],
+            meta_price=59100.00,
+            exchange_tz="Asia/Tokyo",
+            trading_period=make_trading_period(open_now=False),
+        ),
+        hourly_payload=make_hourly_payload([]),  # Tokyo has not opened yet at 02:00
+    )
+
+    with patcher:
+        data = await coord._async_update_data()
+
+    assert data["traded_today"] is False
+    assert data["previous_close"] == pytest.approx(58860.43)
+
+
+async def test_candles_are_dated_in_the_exchange_timezone(hass, freezer):
+    """The stored history should carry session dates, not UTC dates.
+
+    A Sydney open at 10:00 AEDT is 23:00 UTC the day before, so dating by UTC
+    put every such candle one day early — the same mechanism, visible in the
+    long-range charts.
+    """
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    freezer.move_to("2026-11-18T12:00:00+00:00")
+
+    coord = _coord(hass, history=None)
+    patcher, _ = mock_http(
+        make_yahoo_payload(
+            days_prices=[("2026-11-17", 8000.0), ("2026-11-18", 8050.0)],
+            exchange_tz="Australia/Sydney",
+            session_hour_utc=23,  # 10:00 in Sydney, the day after in UTC
+            trading_period=make_trading_period(open_now=False),
+        ),
+        hourly_payload=make_hourly_payload([]),
+    )
+
+    with patcher:
+        await coord._async_update_data()
+
+    assert [d for d, _ in coord._history] == ["2026-11-18", "2026-11-19"]

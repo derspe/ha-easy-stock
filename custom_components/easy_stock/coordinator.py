@@ -7,7 +7,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import HEADERS, YAHOO_CHART_URL, YAHOO_CHART_URL_MINI, YAHOO_CHART_URL_INTRADAY
-from .market_state import derive_market_state, last_trade_date
+from .market_state import derive_market_state, exchange_timezone, last_trade_date
 from .intraday import traded_on
 from .precision import price_decimals, round_price
 
@@ -97,11 +97,16 @@ class StockDataCoordinator(DataUpdateCoordinator):
             timestamps = result.get("timestamp", [])
             closes = result["indicators"]["quote"][0].get("close", [])
 
+            # A session is dated where it is traded. Dating in UTC put every
+            # exchange that opens before 00:00 UTC a day early -- Sydney most of
+            # the year -- and made the date useless for comparing against "now".
+            exchange_tz = exchange_timezone(meta)
+
             # Parse fetched closes into [[date_str, price], ...]
             fetched: list[list] = []
             for ts, c in zip(timestamps, closes):
                 if ts is not None and c is not None:
-                    date_str = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
+                    date_str = datetime.fromtimestamp(ts, tz=exchange_tz).strftime("%Y-%m-%d")
                     fetched.append([date_str, round_price(c)])
 
             # Update persistent history
@@ -128,12 +133,15 @@ class StockDataCoordinator(DataUpdateCoordinator):
                     await self._store.async_save(self._history)
 
             # Price logic — same as before, based on fetched (recent) data
-            # Home Assistant's own timezone, not UTC. The card cuts its 1T series
-            # at local midnight, so a UTC "today" made the hours between local and
-            # UTC midnight belong to the previous session: east of Greenwich the
-            # first hours of a Saturday still counted as Friday, and Yahoo's
-            # post-close revisions were written into the weekend chart (#17).
-            today_str = dt_util.now().strftime("%Y-%m-%d")
+            # Today at the exchange, so that both sides of every date comparison
+            # below are read off the same clock. Home Assistant's timezone was
+            # used here until 0.5.1 and broke wherever the two calendars differ:
+            # from a UTC+9 install, a running US session stopped counting as
+            # "today" at local midnight and its own candle was then taken as the
+            # previous close, collapsing the change to zero (#17). Whether the
+            # asset traded on the *viewer's* day is a different question, and the
+            # intraday bars answer that one in local time.
+            today_str = dt_util.utcnow().astimezone(exchange_tz).strftime("%Y-%m-%d")
             meta_price = meta.get("regularMarketPrice") or 0
 
             # traded_today: the asset produced a price today, so an intraday view
@@ -141,7 +149,7 @@ class StockDataCoordinator(DataUpdateCoordinator):
             # "Did it trade today" is answered by the intraday bars when we have
             # them -- see ./intraday for why the quote cannot be trusted for that.
             # The older signals stay as fallbacks for when that request fails.
-            last_trade_on = last_trade_date(meta, dt_util.now().tzinfo)
+            last_trade_on = last_trade_date(meta, exchange_tz)
 
             traded_today = False
             if len(fetched) >= 2:

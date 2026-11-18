@@ -7,6 +7,7 @@ regular and post windows as epoch seconds, so the session state is derived
 from those instead.
 """
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 # A window covering (near enough) a full day means the asset trades
 # continuously — crypto reports 00:00–23:59 UTC, and the resulting one minute
@@ -107,3 +108,21 @@ def last_trade_date(meta: dict, tzinfo) -> str | None:
     if not isinstance(ts, int) or isinstance(ts, bool) or ts <= 0:
         return None
     return datetime.fromtimestamp(ts, tz=timezone.utc).astimezone(tzinfo).strftime("%Y-%m-%d")
+
+
+def exchange_timezone(meta: dict):
+    """The exchange's own timezone, or UTC when Yahoo ships nothing usable.
+
+    A trading date belongs to the exchange, not to whoever is watching. Dating a
+    candle in UTC puts a Sydney session a day early, and comparing such a date
+    against "today" in the viewer's timezone goes wrong wherever the two
+    calendars differ -- nine hours a day in Tokyo, where a running US session
+    stopped counting as today and its own candle was read as the previous close.
+    """
+    name = meta.get("exchangeTimezoneName")
+    if not isinstance(name, str) or not name:
+        return timezone.utc
+    try:
+        return ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError):
+        return timezone.utc
