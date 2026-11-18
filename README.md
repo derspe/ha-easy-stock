@@ -26,7 +26,7 @@ Track stocks, ETFs, and cryptocurrencies directly in Home Assistant — powered 
   - **Tile size** — choose S / M / L in the visual editor to control how many tiles fit per row
   - **Visual card editor** with drag & drop to reorder assets
   - **20 languages** — UI adapts automatically to your HA language (en, de, fr, nl, es, it, pt, pl, sv, da, nb, fi, cs, hu, ru, zh, ja, ko, tr, ar)
-- **Configurable polling interval** — 60 s to 24 h (default: 15 min)
+- **Configurable polling interval** — 60 s to 24 h (default: 15 min); each update makes two requests to Yahoo Finance, one for the daily series and one for the intraday bars
 - **No API key required**
 
 ## Requirements
@@ -90,7 +90,7 @@ If the card is still missing:
 1. Confirm Easy Stock is listed under **Settings → Devices & Services**. Without a configured
    entry the integration never starts, and the card is not served at all.
 2. Open your browser's developer console and reload the dashboard. The card logs one line on
-   load: `[easy-stock-card] v0.4.0 loaded from http://<your-ha>:8123/easy_stock/easy-stock-card.js?v=…`.
+   load: `[easy-stock-card] v0.6.0 loaded from http://<your-ha>:8123/easy_stock/easy-stock-card.js?v=…`.
    - **No such line** — the browser never loaded the file. Continue with step 3.
    - **Two such lines** — a second, probably stale copy is registered. The card also warns which
      copy was ignored. Remove the duplicate under **Settings → Dashboards → ⋮ → Resources**
@@ -124,7 +124,7 @@ include the console line from step 2 and the `easy_stock.frontend` log lines fro
 |---|---|
 | **Symbol, ISIN or WKN** | A Yahoo Finance ticker (see examples below), an ISIN or a WKN — see [Using an ISIN or WKN](#using-an-isin-or-wkn) |
 | **Name** | Display name shown in the card (optional — if left empty, a new entry takes Yahoo's name for the asset, or the symbol if Yahoo has none). The entity ID always follows the symbol, e.g. `sensor.vgwl_de` |
-| **Update interval** | How often to poll Yahoo Finance in seconds (60–86400, default 900) |
+| **Update interval** | How often to poll Yahoo Finance in seconds (60–86400, default 900). Each poll makes two requests: the daily series and the intraday bars |
 
 Repeat for each asset you want to track. Each asset becomes its own sensor entity.
 
@@ -183,6 +183,13 @@ Each sensor additionally exposes the following state attributes:
 | `previous_close` | float | Previous closing price |
 | `price_is_live` | bool | `true` while the exchange is in session (or the asset trades 24/7) |
 | `traded_today` | bool | `true` once the asset produced a price today — stays `true` after the close |
+
+> **Which day is "today"?** `change`, `change_pct` and `previous_close` are measured against the
+> exchange's own trading day, so a US index keeps the previous US session as its reference no
+> matter where you live. `traded_today` and the 1D chart follow *your* day instead, cutting at
+> midnight in your Home Assistant timezone — that is the day you are looking at. The two answer
+> different questions and can disagree: a US session that is still running at 01:00 in Tokyo has
+> already traded on your day, while its previous close is still the session before it.
 
 ## Lovelace Card
 
@@ -249,6 +256,9 @@ entities:
 - A flat 1D line is *correct* when the asset has not traded today — a weekend, a public holiday, or simply an exchange that has not opened yet. The card deliberately ignores recorder rows in that case, because a stored row is not a trade: without that, every restart and every post-close revision from Yahoo would be drawn as price movement. The line runs from midnight to the current time and the tile reads 0.00 %.
 - Otherwise the HA recorder may not have built up enough history yet — check back after a few polling cycles
 - Ensure the `recorder` integration is enabled in your `configuration.yaml`
+
+**A currency pair shows as closed on Sunday evening**
+- For up to about an hour after the currency market reopens, a pair can still report `CLOSED` with a flat 1D line. Easy Stock decides whether something traded today from Yahoo's intraday bars, and that series takes a while to fill after the two-day break. It corrects itself with the first bar of the new session, and it does not happen at the daily rollover during the week.
 
 **Currency conversion not working**
 - The card fetches rates from [frankfurter.dev](https://frankfurter.dev) (European Central Bank data) — ensure your HA instance has internet access
